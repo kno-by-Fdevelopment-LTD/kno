@@ -1,0 +1,82 @@
+LICENCE COMMERCIALE KNO
+========================
+Copyright (c) 2026 Fdevelopment LTD
+Tous droits réservés.
+
+CONTRAT DE LICENCE UTILISATEUR FINAL (CLUF)
+
+En téléchargeant, installant ou utilisant le logiciel Kno ("le Logiciel"),
+vous acceptez les termes du présent contrat.
+
+1. OCTROI DE LICENCE
+--------------------
+Sous réserve du paiement des droits de licence applicables, Fdevelopment LTD
+vous octroie une licence non exclusive, non transférable pour utiliser le
+Logiciel selon le tier acquis :
+
+  • Licence Solo       : usage sur 1 machine, 1 utilisateur
+  • Licence Étudiante  : usage sur 1 machine, 1 utilisateur (preuve requise)
+  • Licence Pro        : usage sur 1 serveur, jusqu'à 5 utilisateurs simultanés
+  • Licence Business   : usage sur 1 site, utilisateurs illimités
+  • Licence Enterprise : conditions définies par contrat séparé
+
+2. RESTRICTIONS
+---------------
+Il vous est expressément interdit de :
+  a) Copier, modifier, adapter ou créer des œuvres dérivées du Logiciel
+  b) Décompiler, désassembler ou tenter d'extraire le code source
+  c) Distribuer, vendre, louer, prêter ou sous-licencier le Logiciel
+  d) Supprimer ou modifier les mentions de droits d'auteur
+  e) Utiliser le Logiciel au-delà des limites de votre tier de licence
+
+3. MISES À JOUR
+---------------
+Les mises à jour sont incluses pendant 12 mois à compter de la date d'achat.
+Au-delà, un plan de maintenance annuel optionnel est disponible à 20% du
+prix de la licence.
+
+4. PROPRIÉTÉ INTELLECTUELLE
+----------------------------
+Le Logiciel, incluant son code source, sa documentation, ses interfaces et
+ses composants, est la propriété exclusive de Fdevelopment LTD et est
+protégé par les lois françaises et internationales sur le droit d'auteur.
+
+5. ABSENCE DE GARANTIE
+-----------------------
+LE LOGICIEL EST FOURNI "EN L'ÉTAT", SANS GARANTIE D'AUCUNE SORTE, EXPRESSE
+OU IMPLICITE. FDEVELOPMENT LTD NE GARANTIT PAS QUE LE LOGICIEL RÉPONDRA
+À VOS EXIGENCES OU QUE SON FONCTIONNEMENT SERA ININTERROMPU.
+
+6. LIMITATION DE RESPONSABILITÉ
+---------------------------------
+EN AUCUN CAS FDEVELOPMENT LTD NE SERA RESPONSABLE DE DOMMAGES INDIRECTS,
+ACCESSOIRES, SPÉCIAUX, CONSÉCUTIFS OU PUNITIFS RÉSULTANT DE L'UTILISATION
+OU DE L'IMPOSSIBILITÉ D'UTILISER LE LOGICIEL.
+
+7. RÉSILIATION
+--------------
+La présente licence est effective jusqu'à sa résiliation. Elle se résilie
+automatiquement en cas de non-respect de l'un de ses termes. À la résiliation,
+vous devez cesser toute utilisation du Logiciel et détruire toutes les copies.
+
+8. DROIT APPLICABLE
+--------------------
+Le présent contrat est régi par le droit français. Tout litige sera soumis
+à la compétence exclusive des tribunaux de Paris.
+
+9. COMPOSANTS TIERS
+--------------------
+Le Logiciel intègre des composants open source listés dans THIRD_PARTY.md,
+distribués sous leurs licences respectives.
+
+10. CONTACT
+-----------
+Fdevelopment LTD
+contact@fdevelopment.ltd
+https://fdevelopment.ltd
+
+Pour les licences Enterprise ou toute question commerciale :
+commercial@fdevelopment.ltd
+
+---
+Version 1.0 — Janvier 2026
