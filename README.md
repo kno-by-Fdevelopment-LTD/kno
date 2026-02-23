@@ -1,138 +1,165 @@
-# Kno — Assistant GED Local
+# Kno — Local AI Document Assistant
 
-> **Votre IA privée. Vos documents. Votre serveur.**
+> **Your AI. Your documents. Your server.**
 
 [![License](https://img.shields.io/badge/License-Commercial-orange.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-blue.svg)]()
+[![Platform](https://img.shields.io/badge/Platform-Windows-blue.svg)]()
 [![Version](https://img.shields.io/badge/Version-1.0-green.svg)]()
 
----
-
-## Qu'est-ce que Kno ?
-
-**Kno** est un assistant intelligent de gestion documentaire (GED) qui tourne **entièrement sur votre machine**. Posez des questions en langage naturel sur vos documents PDF, Word, Excel, Markdown et texte — sans envoyer une seule donnée vers le cloud.
-
-```
-Vous : "Quelle est la clause de résiliation dans mon contrat avec Dupont SAS ?"
-Kno  : "Selon l'article 12.3 du contrat (contrat_dupont_2024.pdf), la résiliation..."
-```
+*[Français](#français) · [English](#english)*
 
 ---
 
-## Pourquoi Kno ?
+<a name="english"></a>
+## What is Kno?
 
-| Problème | Solution Kno |
+**Kno** is an intelligent document assistant that runs **entirely on your machine**. Ask questions in natural language about your PDF, Word, Excel, Markdown and text files — without sending a single byte to the cloud.
+
+```
+You : "What is the termination clause in my contract with Dupont SAS?"
+Kno : "According to article 12.3 of the contract (contrat_dupont_2024.pdf),
+       termination requires 90 days written notice by registered mail."
+       📎 Source: contrat_dupont_2024.pdf · page 7
+```
+
+---
+
+## Why Kno?
+
+| Problem | Kno's Solution |
 |---|---|
-| ChatGPT lit vos documents confidentiels | Tout reste sur votre serveur |
-| Les solutions cloud coûtent cher par mois | Licence unique, pas d'abonnement |
-| Les RAG open-source sont complexes à installer | Un seul `.exe`, zéro configuration |
-| Données médicales, juridiques, RH sensibles | Conformité RGPD by design |
+| ChatGPT reads your confidential documents | Everything stays on your server |
+| Cloud solutions cost €20–200/month | One-time license, no subscription |
+| Open-source RAG stacks are complex to deploy | Single `.exe`, zero configuration |
+| Medical, legal, HR sensitive data at risk | GDPR compliant by design |
 
 ---
 
-## Fonctionnalités
+## Features
 
-- **RAG local** — Retrieval-Augmented Generation sur vos propres documents
-- **Interface web** — Accessible depuis n'importe quel navigateur sur le réseau local
+- **Local RAG** — Retrieval-Augmented Generation on your own documents, sources cited
+- **Web interface** — Accessible from any browser on the local network
 - **Multi-format** — PDF, DOCX, TXT, MD, XLSX
-- **Administration** — Interface admin complète : gestion des documents, modèles IA, sécurité
-- **Modèles GGUF** — Compatible avec tous les modèles llama.cpp (Mistral, Phi, LLaMA, etc.)
-- **Multi-utilisateurs** — Un seul serveur, plusieurs utilisateurs simultanés
-- **Aucune dépendance cloud** — Fonctionne sans connexion internet après installation
+- **Admin panel** — Document management, AI model selection, security settings
+- **GGUF models** — Compatible with all llama.cpp models (Mistral, Phi, LLaMA…)
+- **Multi-user** — One server, multiple simultaneous users
+- **100% offline** — Works without internet after installation
 
 ---
 
-## Captures d'écran
+## Screenshots
 
-| Interface Chat | Administration | Gestion des documents |
+| Chat Interface | Administration | Document Management |
 |---|---|---|
 | ![Chat](docs/screenshots/chat.png) | ![Admin](docs/screenshots/admin.png) | ![Documents](docs/screenshots/documents.png) |
 
 ---
 
-## Installation rapide
+## Quick Start
 
-### Prérequis
-- Windows 10/11 64-bit (Linux en préparation)
-- 8 Go RAM minimum (16 Go recommandé pour Mistral 7B)
-- 6 Go d'espace disque (modèle inclus)
+### Requirements
+- Windows 10/11 64-bit (Linux coming soon)
+- 8 GB RAM minimum (16 GB recommended for Mistral 7B)
+- 6 GB disk space
 
-### En 3 étapes
+### 3 Steps
 
-**1. Télécharger** Kno depuis la page [Releases](https://github.com/kno-by-Fdevelopment-LTD/kno/releases)
+**1. Download** Kno from the [Releases](https://github.com/kno-by-Fdevelopment-LTD/kno/releases) page
 
-**2. Placer votre modèle GGUF** dans le dossier `models/`
+**2. Place your GGUF model** in the `models/` folder
 ```
 kno/
 ├── kno.exe
 ├── models/
-│   └── Mistral-7B-Instruct-v0.3.Q4_K_M.gguf   ← ici
+│   └── Mistral-7B-Instruct-v0.3.Q4_K_M.gguf
 └── ...
 ```
 
-**3. Lancer `kno.exe`** et ouvrir `http://localhost:8000`
+**3. Run `kno.exe`** — browser opens automatically at `http://localhost:8000`
 
-L'interface admin est disponible sur `http://localhost:8000/admin` (mot de passe configurable dans `config.json`).
+Admin panel: `http://localhost:8000/admin` (password configurable in `config.json`)
 
 ---
 
-## Modèles recommandés
+## Recommended Models
 
-| Modèle | Taille | RAM requise | Qualité |
+| Model | Size | RAM | Quality |
 |---|---|---|---|
-| [Mistral-7B-Instruct-v0.3.Q4_K_M](https://huggingface.co/bartowski/Mistral-7B-Instruct-v0.3-GGUF) | 4.4 Go | 8 Go | ⭐⭐⭐⭐⭐ Recommandé |
-| [Phi-3-mini-4k-instruct.Q4_K_M](https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf) | 2.2 Go | 6 Go | ⭐⭐⭐⭐ Léger |
-| [LLaMA-3.1-8B-Instruct.Q4_K_M](https://huggingface.co/bartowski/Meta-Llama-3.1-8B-Instruct-GGUF) | 4.9 Go | 10 Go | ⭐⭐⭐⭐⭐ Excellent |
+| [Mistral-7B-Instruct-v0.3.Q4_K_M](https://huggingface.co/bartowski/Mistral-7B-Instruct-v0.3-GGUF) | 4.4 GB | 8 GB | ⭐⭐⭐⭐⭐ Recommended |
+| [Phi-3-mini-4k-instruct.Q4_K_M](https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf) | 2.2 GB | 6 GB | ⭐⭐⭐⭐ Lightweight |
+| [LLaMA-3.1-8B-Instruct.Q4_K_M](https://huggingface.co/bartowski/Meta-Llama-3.1-8B-Instruct-GGUF) | 4.9 GB | 10 GB | ⭐⭐⭐⭐⭐ Excellent |
 
 ---
 
-## Tarifs
+## Pricing
 
-| Licence | Prix | Utilisateurs | Mises à jour |
+| License | Price | Users | Updates |
 |---|---|---|---|
-| **Solo** | 39 € | 1 | 1 an inclus |
-| **Étudiant** | 19 € | 1 | 1 an inclus |
-| **Pro** | 99 € | Jusqu'à 5 | 1 an inclus |
-| **Business** | 299 € | Illimité (1 site) | 1 an inclus |
-| **Enterprise** | Sur devis | Multi-sites | Support dédié |
+| **Solo** | €39 | 1 | 1 year included |
+| **Student** | €19 | 1 | 1 year included |
+| **Pro** | €99 | Up to 5 | 1 year included |
+| **Business** | €299 | Unlimited (1 site) | 1 year included |
+| **Enterprise** | Contact us | Multi-site | Dedicated support |
 
-[→ Acheter une licence](https://fdevelopment.ltd/kno)
-
----
-
-## Sécurité & Confidentialité
-
-- **100% local** — Aucune télémétrie, aucun appel réseau externe
-- **Authentification admin** — Interface d'administration protégée par mot de passe
-- **Réseau local uniquement** — Accessible uniquement depuis votre LAN
-- **RGPD compatible** — Aucune donnée ne quitte votre infrastructure
-- **Idéal pour** : documents médicaux, juridiques, RH, financiers, R&D
+[→ Purchase a license](https://fdevelopment.eu/kno)
 
 ---
 
-## Architecture technique
+## Security & Privacy
+
+- **100% local** — No telemetry, no outbound network calls
+- **Admin authentication** — Password-protected admin interface with session tokens
+- **LAN only** — Not exposed to internet by default
+- **GDPR by design** — No data leaves your infrastructure, ever
+- **Ideal for** — Medical, legal, HR, financial and R&D sensitive documents
+
+---
+
+## Architecture
 
 ```
 kno.exe (PyInstaller)
-├── FastAPI + Uvicorn          (serveur web)
+├── FastAPI + Uvicorn          (web server)
 ├── LangChain + FAISS          (RAG pipeline)
-├── llama-cpp-python           (inférence LLM locale)
-├── fastembed / ONNX Runtime   (embeddings)
-└── Interface web HTML/JS      (UI)
+├── llama-cpp-python           (local LLM inference)
+├── fastembed / ONNX Runtime   (embeddings, no PyTorch)
+└── HTML/JS web interface      (UI)
 ```
 
 ---
 
-## Licence
+<a name="français"></a>
+## Français
 
-Kno est un logiciel commercial propriétaire.  
-© 2026 Fdevelopment LTD — Tous droits réservés.  
-Voir [LICENSE](LICENSE) pour les conditions d'utilisation.
+**Kno** est un assistant de gestion documentaire qui tourne entièrement sur votre machine. Posez des questions en langage naturel sur vos documents — sans cloud, sans abonnement.
+
+### Installation
+
+1. Téléchargez depuis la page [Releases](https://github.com/kno-by-Fdevelopment-LTD/kno/releases)
+2. Placez votre modèle GGUF dans `models/`
+3. Lancez `kno.exe` → `http://localhost:8000`
+
+### Tarifs
+
+| Licence | Prix | Utilisateurs |
+|---|---|---|
+| Solo | 39 € | 1 |
+| Étudiant | 19 € | 1 |
+| Pro | 99 € | 5 |
+| Business | 299 € | Illimité |
+
+[→ Acheter](https://fdevelopment.eu/kno) · [→ Documentation complète](docs/)
+
+---
+
+## License
+
+Kno is commercial proprietary software.  
+© 2026 Fdevelopment LTD — All rights reserved.  
+See [LICENSE](LICENSE) for full terms.
 
 ---
 
 ## Contact
 
-- **Site** : [fdevelopment.ltd](https://fdevelopment.ltd)
-- **Email** : contact@fdevelopment.ltd
-- **GitHub** : [@kno-by-Fdevelopment-LTD](https://github.com/kno-by-Fdevelopment-LTD)
+**Website**: [fdevelopment](https://fdevelopment.eu) · **Email**: contact@fdevelopment.eu
