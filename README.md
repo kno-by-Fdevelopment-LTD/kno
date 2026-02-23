@@ -93,15 +93,18 @@ Admin panel: `http://localhost:8000/admin` (password configurable in `config.jso
 
 ## Pricing
 
-| License | Price | Users | Updates |
-|---|---|---|---|
-| **Solo** | €39 | 1 | 1 year included |
-| **Student** | €19 | 1 | 1 year included |
-| **Pro** | €99 | Up to 5 | 1 year included |
-| **Business** | €299 | Unlimited (1 site) | 1 year included |
-| **Enterprise** | Contact us | Multi-site | Dedicated support |
+| License | Price | Duration | Users | Concurrent sessions |
+|---|---|---|---|---|
+| **Solo** | €39 | 5-year perpetual | 1 | 5 |
+| **Student** | €19 | 5-year perpetual | 1 | 5 |
+| **Pro** | €149/year | Annual | Up to 5 | 50 |
+| **Business** | €499/year | Annual | Unlimited (1 site) | Unlimited |
+| **Enterprise** | On quote | Custom | Multi-site | Custom |
 
-[→ Purchase a license](https://fdevelopment.eu/kno)
+[→ Purchase a license](https://kno.fdevelopment.eu)
+
+> 💼 **Specific needs?** Custom deployment, multi-site installation, volume pricing, dedicated SLA or custom integration?  
+> Send your requirements to **contact@fdevelopment.eu** and we'll get back to you within 48 hours.
 
 ---
 
@@ -141,14 +144,18 @@ kno.exe (PyInstaller)
 
 ### Tarifs
 
-| Licence | Prix | Utilisateurs |
-|---|---|---|
-| Solo | 39 € | 1 |
-| Étudiant | 19 € | 1 |
-| Pro | 99 € | 5 |
-| Business | 299 € | Illimité |
+| Licence | Prix | Durée | Utilisateurs | Sessions simultanées |
+|---|---|---|---|---|
+| Solo | 39 € | Perpétuelle 5 ans | 1 | 5 |
+| Étudiant | 19 € | Perpétuelle 5 ans | 1 | 5 |
+| Pro | 149 €/an | Annuelle | 5 | 50 |
+| Business | 499 €/an | Annuelle | Illimité | Illimitées |
+| Enterprise | Sur devis | Sur mesure | Multi-sites | Sur mesure |
 
-[→ Acheter](https://fdevelopment.eu/kno) · [→ Documentation complète](docs/)
+[→ Acheter](https://kno.fdevelopment.eu) · [→ Documentation complète](docs/)
+
+> 💼 **Besoins spécifiques ?** Déploiement multi-sites, intégration personnalisée, tarif volume, SLA dédié ?  
+> Envoyez votre demande de devis à **contact@fdevelopment.eu** — réponse sous 48h.
 
 ---
 
@@ -162,4 +169,4 @@ See [LICENSE](LICENSE) for full terms.
 
 ## Contact
 
-**Website**: [fdevelopment](https://fdevelopment.eu) · **Email**: contact@fdevelopment.eu
+**Website**: [fdevelopment.ltd](https://fdevelopment.ltd) · **Email**: contact@fdevelopment.ltd
