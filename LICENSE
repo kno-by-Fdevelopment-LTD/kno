@@ -1,73 +1,75 @@
-LICENCE COMMERCIALE KNO
-========================
+KNO COMMERCIAL LICENSE
+======================
 Copyright (c) 2026 Fdevelopment LTD
-Tous droits réservés.
+All rights reserved.
 
-CONTRAT DE LICENCE UTILISATEUR FINAL (CLUF)
+END USER LICENSE AGREEMENT (EULA)
 
-En téléchargeant, installant ou utilisant le logiciel Kno ("le Logiciel"),
-vous acceptez les termes du présent contrat.
+By downloading, installing, or using the Kno software ("the Software"), you
+agree to the terms of this agreement.
 
-1. OCTROI DE LICENCE
---------------------
-Sous réserve du paiement des droits de licence applicables, Fdevelopment LTD
-vous octroie une licence non exclusive, non transférable pour utiliser le
-Logiciel selon le tier acquis :
+1. GRANT OF LICENSE
+-------------------
+Subject to payment of the applicable license fees, Fdevelopment LTD grants
+you a non-exclusive, non-transferable license to use the Software according
+to the tier purchased:
 
-  • Licence Solo       : usage sur 1 machine, 1 utilisateur
-  • Licence Étudiante  : usage sur 1 machine, 1 utilisateur (preuve requise)
-  • Licence Pro        : usage sur 1 serveur, jusqu'à 5 utilisateurs simultanés
-  • Licence Business   : usage sur 1 site, utilisateurs illimités
-  • Licence Enterprise : conditions définies par contrat séparé
+  • Solo License      : use on 1 machine, 1 user
+  • Student License   : use on 1 machine, 1 user (proof of enrollment required)
+  • Pro License       : use on 1 server, up to 5 simultaneous users
+  • Business License  : use on 1 site, unlimited users
+  • Enterprise License: terms defined by separate agreement
 
 2. RESTRICTIONS
 ---------------
-Il vous est expressément interdit de :
-  a) Copier, modifier, adapter ou créer des œuvres dérivées du Logiciel
-  b) Décompiler, désassembler ou tenter d'extraire le code source
-  c) Distribuer, vendre, louer, prêter ou sous-licencier le Logiciel
-  d) Supprimer ou modifier les mentions de droits d'auteur
-  e) Utiliser le Logiciel au-delà des limites de votre tier de licence
+You may not:
+  a) Copy, modify, adapt, or create derivative works of the Software
+  b) Decompile, disassemble, or attempt to extract the source code
+  c) Distribute, sell, rent, lend, or sublicense the Software
+  d) Remove or alter any copyright notices or proprietary markings
+  e) Use the Software beyond the limits of your purchased license tier
 
-3. MISES À JOUR
----------------
-Les mises à jour sont incluses pendant 12 mois à compter de la date d'achat.
-Au-delà, un plan de maintenance annuel optionnel est disponible à 20% du
-prix de la licence.
+3. UPDATES
+----------
+Updates are included for 12 months from the date of purchase.
+An optional annual maintenance plan is available at 20% of the license price.
 
-4. PROPRIÉTÉ INTELLECTUELLE
+4. INTELLECTUAL PROPERTY
+------------------------
+The Software, including its source code, documentation, interfaces, and
+components, is the exclusive property of Fdevelopment LTD and is protected
+by French and international copyright law.
+
+5. DISCLAIMER OF WARRANTIES
 ----------------------------
-Le Logiciel, incluant son code source, sa documentation, ses interfaces et
-ses composants, est la propriété exclusive de Fdevelopment LTD et est
-protégé par les lois françaises et internationales sur le droit d'auteur.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. FDEVELOPMENT LTD DOES
+NOT WARRANT THAT THE SOFTWARE WILL MEET YOUR REQUIREMENTS OR THAT ITS
+OPERATION WILL BE UNINTERRUPTED OR ERROR-FREE.
 
-5. ABSENCE DE GARANTIE
------------------------
-LE LOGICIEL EST FOURNI "EN L'ÉTAT", SANS GARANTIE D'AUCUNE SORTE, EXPRESSE
-OU IMPLICITE. FDEVELOPMENT LTD NE GARANTIT PAS QUE LE LOGICIEL RÉPONDRA
-À VOS EXIGENCES OU QUE SON FONCTIONNEMENT SERA ININTERROMPU.
+6. LIMITATION OF LIABILITY
+---------------------------
+IN NO EVENT SHALL FDEVELOPMENT LTD BE LIABLE FOR ANY INDIRECT, INCIDENTAL,
+SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING OUT OF OR IN CONNECTION
+WITH YOUR USE OF OR INABILITY TO USE THE SOFTWARE, EVEN IF FDEVELOPMENT LTD
+HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 
-6. LIMITATION DE RESPONSABILITÉ
----------------------------------
-EN AUCUN CAS FDEVELOPMENT LTD NE SERA RESPONSABLE DE DOMMAGES INDIRECTS,
-ACCESSOIRES, SPÉCIAUX, CONSÉCUTIFS OU PUNITIFS RÉSULTANT DE L'UTILISATION
-OU DE L'IMPOSSIBILITÉ D'UTILISER LE LOGICIEL.
-
-7. RÉSILIATION
+7. TERMINATION
 --------------
-La présente licence est effective jusqu'à sa résiliation. Elle se résilie
-automatiquement en cas de non-respect de l'un de ses termes. À la résiliation,
-vous devez cesser toute utilisation du Logiciel et détruire toutes les copies.
+This license is effective until terminated. It terminates automatically upon
+failure to comply with any of its terms. Upon termination, you must cease all
+use of the Software and destroy all copies.
 
-8. DROIT APPLICABLE
---------------------
-Le présent contrat est régi par le droit français. Tout litige sera soumis
-à la compétence exclusive des tribunaux de Paris.
+8. GOVERNING LAW
+----------------
+This agreement is governed by French law. Any dispute shall be subject to the
+exclusive jurisdiction of the courts of Paris, France.
 
-9. COMPOSANTS TIERS
---------------------
-Le Logiciel intègre des composants open source listés dans THIRD_PARTY.md,
-distribués sous leurs licences respectives.
+9. THIRD-PARTY COMPONENTS
+--------------------------
+The Software incorporates open-source components listed in THIRD_PARTY.md,
+each distributed under their respective licenses.
 
 10. CONTACT
 -----------
@@ -75,8 +77,25 @@ Fdevelopment LTD
 contact@fdevelopment.ltd
 https://fdevelopment.ltd
 
-Pour les licences Enterprise ou toute question commerciale :
+For Enterprise licenses or commercial inquiries:
 commercial@fdevelopment.ltd
 
 ---
-Version 1.0 — Janvier 2026
+
+LICENCE COMMERCIALE KNO (Français)
+====================================
+Copyright (c) 2026 Fdevelopment LTD
+Tous droits réservés.
+
+En téléchargeant, installant ou utilisant le logiciel Kno, vous acceptez les
+termes du présent contrat de licence utilisateur final (CLUF).
+
+Les droits accordés, restrictions, garanties et limitations décrits ci-dessus
+s'appliquent intégralement. Ce logiciel est fourni sous licence commerciale
+propriétaire. Toute reproduction, distribution ou modification non autorisée
+est strictement interdite.
+
+Loi applicable : droit français. Juridiction : tribunaux de Paris.
+
+---
+Version 1.0 — January 2026
