@@ -194,4 +194,4 @@ Pour toute question commerciale ou activation de licence : **contact@fdevelopmen
 
 ## Contact
 
-**Website**: [fdevelopment.ltd](https://fdevelopment.ltd) · **Email**: contact@fdevelopment.ltd
+**Website**: [fdevelopment.eu](https://kno.fdevelopment.eu) · **Email**: contact@fdevelopment.eu
