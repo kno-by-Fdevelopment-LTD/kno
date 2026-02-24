@@ -128,6 +128,17 @@ kno.exe (PyInstaller)
 ├── fastembed / ONNX Runtime   (embeddings, no PyTorch)
 └── HTML/JS web interface      (UI)
 ```
+## 🐛 Report a bug or suggestion
+
+Go to the [Issues](https://github.com/kno-by-Fdevelopment-LTD/kno/issues) page of the GitHub repository and click **New issue**.
+
+Please include:
+- Your Kno version (e.g. v1.0.0)
+- Your OS (Windows 10 / 11)
+- What you did and what happened
+- The console output if it's a bug
+
+For commercial inquiries or license activation: **contact@fdevelopment.eu**
 
 ---
 
@@ -164,6 +175,20 @@ kno.exe (PyInstaller)
 Kno is commercial proprietary software.  
 © 2026 Fdevelopment LTD — All rights reserved.  
 See [LICENSE](LICENSE) for full terms.
+
+---
+
+## 🐛 Signaler un bug ou une suggestion
+
+Rendez-vous sur la page [Issues](https://github.com/kno-by-Fdevelopment-LTD/kno/issues) du dépôt GitHub et cliquez sur **New issue**.
+
+Précisez :
+- Votre version de Kno (ex : v1.0.0)
+- Le système (Windows 10 / 11)
+- Ce que vous avez fait et ce qui s'est passé
+- Le contenu de la console si c'est un bug
+
+Pour toute question commerciale ou activation de licence : **contact@fdevelopment.eu**
 
 ---
 
