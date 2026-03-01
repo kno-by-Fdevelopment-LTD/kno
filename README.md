@@ -30,7 +30,7 @@ Kno : "According to article 12.3 of the contract (contrat_dupont_2024.pdf),
 |---|---|
 | ChatGPT reads your confidential documents | Everything stays on your server |
 | Cloud solutions cost €20–200/month | One-time license, no subscription |
-| Open-source RAG stacks are complex to deploy | Single binary, zero configuration |
+| Open-source RAG stacks are complex to deploy | Single `.exe`, zero configuration |
 | Medical, legal, HR sensitive data at risk | GDPR compliant by design |
 
 ---
@@ -48,9 +48,22 @@ Kno : "According to article 12.3 of the contract (contrat_dupont_2024.pdf),
 
 ---
 
+## Screenshots
+
+| Chat Interface | Administration | Document Management |
+|---|---|---|
+| ![Chat](docs/screenshots/chat.png) | ![Admin](docs/screenshots/admin.png) | ![Documents](docs/screenshots/documents.png) |
+
+---
+
 ## Quick Start
 
-### Option A — Windows installer
+### Requirements
+- Windows 10/11 64-bit **or** Linux 64-bit (Ubuntu 20.04+, Debian 11+, Zorin OS…)
+- 8 GB RAM minimum (16 GB recommended for Mistral 7B)
+- 6 GB disk space
+
+### Option A — Windows
 
 **1. Download** `Kno-Setup-vX.Y.Z-windows.exe` from the [Releases](https://github.com/kno-by-Fdevelopment-LTD/kno/releases) page
 
@@ -65,13 +78,15 @@ kno/
 
 **3. Run `kno.exe`** — browser opens automatically at `http://localhost:8000`
 
+Admin panel: `http://localhost:8000/admin` (password configurable in `config.json`)
+
 ---
 
 ### Option B — Linux (Ubuntu / Debian / Zorin)
 
 **1. Download** `Kno-linux-x64-vX.Y.Z.tar.gz` from the [Releases](https://github.com/kno-by-Fdevelopment-LTD/kno/releases) page
 
-**2. Extract and install**
+**2. Extract**
 ```bash
 tar -xzf Kno-linux-x64-v1.7.7.tar.gz
 cd kno
@@ -88,37 +103,21 @@ cp /path/to/your-model.gguf models/
 # → http://localhost:8000
 ```
 
-> To start automatically on boot, see [Linux autostart](#linux-autostart) below.
+Admin panel: `http://localhost:8000/admin`
 
 ---
 
-### Option C — npm (Node.js required)
+### Option C — npm (Node.js 16+ required)
 
-The easiest option for developers and students. Requires Node.js 16+.
+The easiest option for developers and students. Downloads the correct binary for your OS automatically.
 
 ```bash
-# Install globally
 npm install -g kno-local
-
-# Launch
 kno
 # → http://localhost:8000
 ```
 
-Kno automatically downloads the correct binary for your OS (Windows or Linux x64) and installs it in `~/.kno/`.
-
-To update:
-```bash
-npm update -g kno-local
-```
-
----
-
-## Admin panel
-
-`http://localhost:8000/admin`
-
-Default password: `admin` (change it in the admin panel on first launch)
+To update: `npm update -g kno-local`
 
 ---
 
@@ -129,49 +128,6 @@ Default password: `admin` (change it in the admin panel on first launch)
 | [Mistral-7B-Instruct-v0.3.Q4_K_M](https://huggingface.co/bartowski/Mistral-7B-Instruct-v0.3-GGUF) | 4.4 GB | 8 GB | ⭐⭐⭐⭐⭐ Recommended |
 | [Phi-3-mini-4k-instruct.Q4_K_M](https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf) | 2.2 GB | 6 GB | ⭐⭐⭐⭐ Lightweight |
 | [LLaMA-3.1-8B-Instruct.Q4_K_M](https://huggingface.co/bartowski/Meta-Llama-3.1-8B-Instruct-GGUF) | 4.9 GB | 10 GB | ⭐⭐⭐⭐⭐ Excellent |
-
----
-
-## Requirements
-
-| | Windows | Linux |
-|---|---|---|
-| OS | Windows 10/11 64-bit | Ubuntu 20.04+ / Debian 11+ / Zorin OS |
-| RAM | 8 GB minimum (16 GB recommended) | 8 GB minimum (16 GB recommended) |
-| Disk | 6 GB | 6 GB |
-| Node.js | Only for npm option | Only for npm option |
-
----
-
-## Linux autostart
-
-To launch Kno automatically as a service:
-
-```bash
-# Create a systemd service
-sudo nano /etc/systemd/system/kno.service
-```
-
-```ini
-[Unit]
-Description=Kno Local AI Assistant
-After=network.target
-
-[Service]
-Type=simple
-User=YOUR_USER
-WorkingDirectory=/path/to/kno
-ExecStart=/path/to/kno/kno
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
-```
-
-```bash
-sudo systemctl enable kno
-sudo systemctl start kno
-```
 
 ---
 
@@ -187,8 +143,8 @@ sudo systemctl start kno
 
 [→ Purchase a license](https://kno.fdevelopment.eu)
 
-> 💼 **Specific needs?** Custom deployment, multi-site installation, volume pricing, dedicated SLA or custom integration?
-> Send your requirements to **contact@fdevelopment.eu** — response within 48 hours.
+> 💼 **Specific needs?** Custom deployment, multi-site installation, volume pricing, dedicated SLA or custom integration?  
+> Send your requirements to **contact@fdevelopment.eu** and we'll get back to you within 48 hours.
 
 ---
 
@@ -205,7 +161,7 @@ sudo systemctl start kno
 ## Architecture
 
 ```
-kno (PyInstaller binary)
+kno / kno.exe (PyInstaller)
 ├── FastAPI + Uvicorn          (web server)
 ├── LangChain + FAISS          (RAG pipeline)
 ├── llama-cpp-python           (local LLM inference)
@@ -217,11 +173,11 @@ kno (PyInstaller binary)
 
 ## 🐛 Report a bug or suggestion
 
-Go to the [Issues](https://github.com/kno-by-Fdevelopment-LTD/kno/issues) page and click **New issue**.
+Go to the [Issues](https://github.com/kno-by-Fdevelopment-LTD/kno/issues) page of the GitHub repository and click **New issue**.
 
 Please include:
 - Your Kno version (e.g. v1.7.7)
-- Your OS (Windows 10/11 or Linux distro)
+- Your OS (Windows 10/11 or Linux distro + version)
 - What you did and what happened
 - The console output if it's a bug
 
@@ -262,8 +218,6 @@ npm install -g kno-local
 kno
 ```
 
-Kno télécharge automatiquement le bon binaire pour votre OS.
-
 ### Tarifs
 
 | Licence | Prix | Durée | Utilisateurs | Sessions simultanées |
@@ -276,19 +230,33 @@ Kno télécharge automatiquement le bon binaire pour votre OS.
 
 [→ Acheter](https://kno.fdevelopment.eu) · [→ Documentation complète](docs/)
 
-> 💼 **Besoins spécifiques ?** Déploiement multi-sites, intégration personnalisée, tarif volume, SLA dédié ?
-> Envoyez votre demande à **contact@fdevelopment.eu** — réponse sous 48h.
+> 💼 **Besoins spécifiques ?** Déploiement multi-sites, intégration personnalisée, tarif volume, SLA dédié ?  
+> Envoyez votre demande de devis à **contact@fdevelopment.eu** — réponse sous 48h.
 
 ---
 
 ## License
 
-Kno is commercial proprietary software.
-© 2026 Fdevelopment LTD — All rights reserved.
+Kno is commercial proprietary software.  
+© 2026 Fdevelopment LTD — All rights reserved.  
 See [LICENSE](LICENSE) for full terms.
+
+---
+
+## 🐛 Signaler un bug ou une suggestion
+
+Rendez-vous sur la page [Issues](https://github.com/kno-by-Fdevelopment-LTD/kno/issues) du dépôt GitHub et cliquez sur **New issue**.
+
+Précisez :
+- Votre version de Kno (ex : v1.7.7)
+- Le système (Windows 10/11 ou distro Linux + version)
+- Ce que vous avez fait et ce qui s'est passé
+- Le contenu de la console si c'est un bug
+
+Pour toute question commerciale ou activation de licence : **contact@fdevelopment.eu**
 
 ---
 
 ## Contact
 
-**Website**: [kno.fdevelopment.eu](https://kno.fdevelopment.eu) · **Email**: contact@fdevelopment.eu
+**Website**: [fdevelopment.eu](https://kno.fdevelopment.eu) · **Email**: contact@fdevelopment.eu
