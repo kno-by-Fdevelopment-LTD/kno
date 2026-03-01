@@ -82,7 +82,23 @@ Admin panel: `http://localhost:8000/admin` (password configurable in `config.jso
 
 ---
 
-### Option B — Linux (Ubuntu / Debian / Zorin)
+### Option B — Linux one-liner ⭐ Recommended
+
+One command, no dependencies, works on any Linux x64:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/kno-by-Fdevelopment-LTD/kno/main/install.sh | bash
+```
+
+Then launch:
+```bash
+kno
+# → http://localhost:8000
+```
+
+---
+
+### Option C — Linux manual (tar.gz)
 
 **1. Download** `Kno-linux-x64-vX.Y.Z.tar.gz` from the [Releases](https://github.com/kno-by-Fdevelopment-LTD/kno/releases) page
 
@@ -107,17 +123,17 @@ Admin panel: `http://localhost:8000/admin`
 
 ---
 
-### Option C — npm (Node.js 16+ required)
+### Option D — npm (Node.js 16+ required)
 
-The easiest option for developers and students. Downloads the correct binary for your OS automatically.
+For developers. Downloads the correct binary for your OS automatically.
 
 ```bash
-npm install -g kno-local
+npm install -g kno-fdevelopment
 kno
 # → http://localhost:8000
 ```
 
-To update: `npm update -g kno-local`
+To update: `npm update -g kno-fdevelopment`
 
 ---
 
@@ -196,7 +212,19 @@ For commercial inquiries or license activation: **contact@fdevelopment.eu**
 2. Placez votre modèle GGUF dans `models/`
 3. Lancez `kno.exe` → `http://localhost:8000`
 
-### Installation Linux (Ubuntu / Debian / Zorin)
+### Installation Linux — une seule commande ⭐ Recommandé
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/kno-by-Fdevelopment-LTD/kno/main/install.sh | bash
+```
+
+Puis lancez :
+```bash
+kno
+# → http://localhost:8000
+```
+
+### Installation Linux manuelle (tar.gz)
 
 ```bash
 # Extraire l'archive
@@ -214,7 +242,7 @@ cp /chemin/vers/votre-modele.gguf models/
 ### Installation via npm (Node.js requis)
 
 ```bash
-npm install -g kno-local
+npm install -g kno-fdevelopment
 kno
 ```
 
