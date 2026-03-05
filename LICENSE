@@ -8,16 +8,19 @@ END USER LICENSE AGREEMENT (EULA)
 By downloading, installing, or using the Kno software ("the Software"), you
 agree to the terms of this agreement.
 
+Kno is a locally deployed AI document assistant designed to
+analyze and search documents within the user's infrastructure.
+
 1. GRANT OF LICENSE
 -------------------
 Subject to payment of the applicable license fees, Fdevelopment LTD grants
 you a non-exclusive, non-transferable license to use the Software according
 to the tier purchased:
 
-  • Solo License      : use on 1 machine, 1 user
-  • Student License   : use on 1 machine, 1 user (proof of enrollment required)
-  • Pro License       : use on 1 server, up to 5 simultaneous users
-  • Business License  : use on 1 site, unlimited users
+  • Solo License      : Installed and used on a single physical or virtual machine
+  • Student License   : Installed and used on a single physical or virtual machine (proof of enrollment required)
+  • Pro License       : use on 1 server, up to 5 simultaneous users (simultaneous active sessions)
+  • Business License  : use on 1 site, unlimited users (use within a single legal entity and physical site)
   • Enterprise License: terms defined by separate agreement
 
 2. RESTRICTIONS
@@ -48,37 +51,66 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. FDEVELOPMENT LTD DOES
 NOT WARRANT THAT THE SOFTWARE WILL MEET YOUR REQUIREMENTS OR THAT ITS
 OPERATION WILL BE UNINTERRUPTED OR ERROR-FREE.
 
-6. LIMITATION OF LIABILITY
+6. AI GENERATED CONTENT
+-----------------------
+The Software may generate responses using artificial intelligence.
+These responses are generated automatically and may be inaccurate,
+incomplete, or misleading. Users are responsible for verifying any
+information before relying on it.
+
+7. LIMITATION OF LIABILITY
 ---------------------------
 IN NO EVENT SHALL FDEVELOPMENT LTD BE LIABLE FOR ANY INDIRECT, INCIDENTAL,
 SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING OUT OF OR IN CONNECTION
 WITH YOUR USE OF OR INABILITY TO USE THE SOFTWARE, EVEN IF FDEVELOPMENT LTD
 HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 
-7. TERMINATION
+8. TERMINATION
 --------------
 This license is effective until terminated. It terminates automatically upon
 failure to comply with any of its terms. Upon termination, you must cease all
 use of the Software and destroy all copies.
 
-8. GOVERNING LAW
+9. GOVERNING LAW
 ----------------
 This agreement is governed by French law. Any dispute shall be subject to the
 exclusive jurisdiction of the courts of Paris, France.
 
-9. THIRD-PARTY COMPONENTS
+10. THIRD-PARTY COMPONENTS
 --------------------------
 The Software incorporates open-source components listed in THIRD_PARTY.md,
 each distributed under their respective licenses.
 
-10. CONTACT
+11. IMPORTANT
+-------------
+The Software must not be used for life-critical decisions,
+including but not limited to medical diagnosis, legal advice,
+financial decisions, or safety-critical systems without
+independent professional verification.
+
+12. AI MODELS
+-------------
+The Software may allow the use of third-party AI models.
+Fdevelopment LTD does not own or control these models and
+is not responsible for their behavior, outputs, or licensing terms.
+Users are responsible for ensuring compliance with the licenses
+of any models they install or use with the Software.
+
+13. DOCUMENTS
+-------------
+The Software processes documents and data provided by the user.
+Fdevelopment LTD does not access, collect, or store user data.
+Users are solely responsible for the content they process with
+the Software and for compliance with applicable data protection laws.
+
+14. CONTACT
 -----------
 Fdevelopment LTD
 contact@fdevelopment.ltd
 https://fdevelopment.ltd
 
 For Enterprise licenses or commercial inquiries:
-commercial@fdevelopment.ltd
+contact@fdevelopment.ltd
 
 ---
 
