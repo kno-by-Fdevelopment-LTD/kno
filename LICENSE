@@ -17,12 +17,17 @@ Subject to payment of the applicable license fees, Fdevelopment LTD grants
 you a non-exclusive, non-transferable license to use the Software according
 to the tier purchased:
 
-  • Solo License      : Installed and used on a single physical or virtual machine
-  • Student License   : Installed and used on a single physical or virtual machine (proof of enrollment required)
-  • Pro License       : use on 1 server, up to 5 simultaneous users (simultaneous active sessions)
-  • Business License  : use on 1 site, unlimited users (use within a single legal entity and physical site)
-  • Enterprise License: terms defined by separate agreement
-
+   • Solo License      : Installed and used on a single physical or virtual machine.
+                         Limited to a single user and a limited number of simultaneous sessions.
+   • Student License   : Installed and used on a single physical or virtual machine.
+                         Limited to a single user and a limited number of simultaneous sessions.
+                         Proof of enrollment may be required.
+   • Pro License       : Installed on one server and limited to up to five named users
+                         and a defined number of simultaneous active sessions.
+   • Business License  : Installed within a single organization site with unlimited users
+                         and a defined number of simultaneous active sessions.
+   • Enterprise License: Terms defined by a separate commercial agreement.
+  
 2. RESTRICTIONS
 ---------------
 You may not:
