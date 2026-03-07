@@ -4,7 +4,7 @@
 
 set -e
 
-KNO_VERSION="1.7.7"
+KNO_VERSION="1.8.0"
 REPO="kno-by-Fdevelopment-LTD/kno"
 ASSET="Kno-linux-x64-v${KNO_VERSION}.tar.gz"
 URL="https://github.com/${REPO}/releases/download/v${KNO_VERSION}/${ASSET}"
