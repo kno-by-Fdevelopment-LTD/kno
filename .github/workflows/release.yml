@@ -218,7 +218,13 @@ jobs:
           venv/bin/python -m pip install --upgrade pip wheel setuptools
           grep -v '^llama-cpp-python' requirements.txt > requirements-ci.txt
           venv/bin/pip install -r requirements-ci.txt
+          # llama-cpp-python : on installe le wheel CUDA cu122 comme dans
+          # build.sh local. Crucial parce que ce wheel tire les mêmes
+          # dépendances transitives que sur ta machine (pandas, numpy, etc.).
+          # Au runtime le binaire tournera en CPU chez les clients sans CUDA
+          # installé (fallback automatique de llama.cpp).
           venv/bin/pip install "llama-cpp-python==${{ env.LLAMA_CPP_VERSION }}" \
+            --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu122 \
             --force-reinstall --no-cache-dir
           venv/bin/pip install "pyinstaller${{ env.PYINSTALLER_VERSION }}" pyarmor
 
