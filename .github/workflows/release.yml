@@ -272,98 +272,6 @@ jobs:
           if-no-files-found: error
 
   # ──────────────────────────────────────────────────────────────────────────
-  # BUILD MACOS INTEL
-  # ──────────────────────────────────────────────────────────────────────────
-  build-macos-intel:
-    name: Build macOS (Intel x86_64)
-    needs: prepare
-    runs-on: macos-13
-    timeout-minutes: 90
-    steps:
-      - name: Checkout private source repo
-        uses: actions/checkout@v4
-        with:
-          repository: kaneda59/Kno
-          token: ${{ secrets.PAT_READ_PRIVATE }}
-          ref: ${{ needs.prepare.outputs.tag }}
-
-      - name: Setup Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          architecture: x64
-          cache: 'pip'
-
-      - name: Verify architecture
-        run: test "$(python -c 'import platform; print(platform.machine())')" = "x86_64"
-
-      - name: Create venv and install dependencies
-        run: |
-          python -m venv venv
-          venv/bin/python -m pip install --upgrade pip wheel setuptools
-          grep -v '^llama-cpp-python' requirements.txt > requirements-ci.txt
-          venv/bin/pip install -r requirements-ci.txt
-          venv/bin/pip install "llama-cpp-python==${{ env.LLAMA_CPP_VERSION }}" \
-            --force-reinstall --no-cache-dir
-          venv/bin/pip install "pyinstaller${{ env.PYINSTALLER_VERSION }}" pyarmor
-
-      - name: Prepare sources
-        run: venv/bin/python ci/prepare_build.py "${{ needs.prepare.outputs.version }}"
-
-      - name: Compile with PyInstaller
-        run: |
-          venv/bin/pyinstaller --clean --noconfirm kno.spec
-          [ -f "dist/kno/kno" ] || (echo "::error::dist/kno/kno introuvable" && exit 1)
-          file dist/kno/kno | grep -q "x86_64" || (echo "::error::Binaire non x86_64" && exit 1)
-
-      - name: Package tarball
-        run: |
-          VERSION="${{ needs.prepare.outputs.version }}"
-          TAG="${{ needs.prepare.outputs.tag }}"
-          ARCHIVE_NAME="Kno-macos-x64-$TAG.tar.gz"
-
-          mkdir -p release/installer
-          TMP_PACK=$(mktemp -d)
-          mkdir -p "$TMP_PACK/kno"
-          cp -R dist/kno/ "$TMP_PACK/kno/"
-          echo '{"model_path": "", "admin_password": "admin"}' > "$TMP_PACK/kno/config.json"
-          mkdir -p "$TMP_PACK/kno/models"
-
-          cat > "$TMP_PACK/kno/start_kno.sh" << 'LAUNCHER'
-          #!/usr/bin/env bash
-          SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-          cd "$SCRIPT_DIR"
-          echo "Kno demarre -> http://localhost:8000"
-          (sleep 2 && open http://localhost:8000 2>/dev/null || true) &
-          ./kno
-          LAUNCHER
-          chmod +x "$TMP_PACK/kno/start_kno.sh" "$TMP_PACK/kno/kno"
-
-          cat > "$TMP_PACK/kno/README_MACOS_FIRST_RUN.txt" << 'EOF'
-          KNO MACOS (Intel) - PREMIERE EXECUTION
-
-          Ce binaire n'est pas signe. Au premier lancement :
-
-              cd "/chemin/vers/kno"
-              xattr -dr com.apple.quarantine .
-              ./start_kno.sh
-
-          Support : contact@fdevelopment.eu
-          EOF
-
-          tar -czf "release/installer/$ARCHIVE_NAME" -C "$TMP_PACK" kno
-          rm -rf "$TMP_PACK"
-          ls -lh "release/installer/$ARCHIVE_NAME"
-
-      - name: Upload macOS Intel artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-intel-tarball
-          path: release/installer/Kno-macos-x64-*.tar.gz
-          retention-days: 7
-          if-no-files-found: error
-
-  # ──────────────────────────────────────────────────────────────────────────
   # BUILD MACOS APPLE SILICON
   # ──────────────────────────────────────────────────────────────────────────
   build-macos-arm:
@@ -462,7 +370,7 @@ jobs:
   # ──────────────────────────────────────────────────────────────────────────
   publish-release:
     name: Publish release
-    needs: [prepare, build-windows, build-linux, build-macos-intel, build-macos-arm]
+    needs: [prepare, build-windows, build-linux, build-macos-arm]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -490,8 +398,8 @@ jobs:
           echo "Fichiers a publier :"
           ls -lh release_assets/
           COUNT=$(ls release_assets/ | wc -l)
-          if [ "$COUNT" -lt 4 ]; then
-            echo "::error::Attendu 4 artefacts, trouve $COUNT"
+          if [ "$COUNT" -lt 3 ]; then
+            echo "::error::Attendu 3 artefacts, trouve $COUNT"
             exit 1
           fi
 
