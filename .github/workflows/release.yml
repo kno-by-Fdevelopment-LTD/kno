@@ -234,96 +234,43 @@ jobs:
           fi
           file dist/kno/kno
 
-      - name: Package as AppImage
+      - name: Package tarball
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
           TAG="${{ needs.prepare.outputs.tag }}"
-          ARCHIVE_NAME="Kno-$TAG-x86_64.AppImage"
+          ARCHIVE_NAME="Kno-linux-x64-$TAG.tar.gz"
 
           mkdir -p release/installer
 
-          # Structure AppDir : c'est le format attendu par appimagetool
-          APPDIR=$(mktemp -d)/Kno.AppDir
-          mkdir -p "$APPDIR/usr/bin"
-          cp -r dist/kno/. "$APPDIR/usr/bin/"
+          # Structure de l'archive (identique à celle qui marchait sur les
+          # versions précédentes : ouvert avec un gestionnaire d'archives,
+          # double-clic sur "kno" suffit pour lancer le binaire) :
+          #   kno/
+          #     _internal/    (libs PyInstaller : libpython3.11.so.1.0, etc.)
+          #     models/       (dossier vide pour que l'utilisateur dépose ses GGUF)
+          #     config.json
+          #     kno           (binaire exécutable principal)
+          TMP_PACK=$(mktemp -d)
+          mkdir -p "$TMP_PACK/kno"
+          cp -r dist/kno/. "$TMP_PACK/kno/"
 
-          # Config par défaut + dossier models, embarqués dans l'image
-          echo '{"model_path": "", "admin_password": "admin"}' > "$APPDIR/usr/bin/config.json"
-          mkdir -p "$APPDIR/usr/bin/models"
+          echo '{"model_path": "", "admin_password": "admin"}' > "$TMP_PACK/kno/config.json"
+          mkdir -p "$TMP_PACK/kno/models"
 
-          # AppRun = script lancé au double-clic. Copie config/models dans
-          # ~/.kno si pas déjà présent (pour persistance entre versions),
-          # puis lance kno et ouvre le navigateur sur localhost:8000.
-          cat > "$APPDIR/AppRun" << 'APPRUN'
-          #!/bin/bash
-          # AppRun = entrée du AppImage. Au lancement, AppImage extrait son
-          # contenu dans /tmp/.mount_KnoXXXX/ et appelle ce script.
-          # HERE = chemin vers le AppDir extrait (ex: /tmp/.mount_KnoAbc12).
-          HERE="$(dirname "$(readlink -f "${0}")")"
-          BIN_DIR="$HERE/usr/bin"
+          # S'assure que le binaire kno est exécutable
+          chmod +x "$TMP_PACK/kno/kno"
 
-          # PyInstaller en mode onedir attend libpython3.11.so.1.0 dans le
-          # dossier _internal/ à côté du binaire. On expose ce chemin au
-          # loader dynamique pour qu'il trouve la lib.
-          export LD_LIBRARY_PATH="$BIN_DIR/_internal:$BIN_DIR:${LD_LIBRARY_PATH:-}"
+          tar -czf "release/installer/$ARCHIVE_NAME" -C "$TMP_PACK" kno
+          rm -rf "$TMP_PACK"
 
-          # Données utilisateur persistantes dans ~/.kno (survit aux maj)
-          USER_DIR="$HOME/.kno"
-          mkdir -p "$USER_DIR/models" "$USER_DIR/data" "$USER_DIR/vectorstore"
-          [ ! -f "$USER_DIR/config.json" ] && cp "$BIN_DIR/config.json" "$USER_DIR/config.json"
-          cd "$USER_DIR"
-          export KNO_HOME="$USER_DIR"
-
-          # Ouvre le navigateur après 3s (laisse le temps au serveur de démarrer)
-          (sleep 3 && xdg-open http://localhost:8000 2>/dev/null) &
-
-          # Lance le binaire kno depuis son répertoire d'origine pour que
-          # PyInstaller trouve _internal/ relativement à sys.executable.
-          cd "$BIN_DIR"
-          exec ./kno
-          APPRUN
-          chmod +x "$APPDIR/AppRun"
-
-          # Icône (utilisée par les gestionnaires de bureau)
-          if [ -f "assets/kno_icon.png" ]; then
-            cp assets/kno_icon.png "$APPDIR/kno.png"
-          else
-            # Fallback : icône vide 1x1 pour ne pas faire planter appimagetool
-            echo "::warning::assets/kno_icon.png absent - icône par défaut"
-            convert -size 256x256 xc:'#1a2238' "$APPDIR/kno.png" 2>/dev/null || \
-              python3 -c "from PIL import Image; Image.new('RGB',(256,256),'#1a2238').save('$APPDIR/kno.png')"
-          fi
-
-          # .desktop : fichier de menu d'application (norme freedesktop.org)
-          cat > "$APPDIR/kno.desktop" << 'DESKTOP'
-          [Desktop Entry]
-          Name=Kno
-          Comment=Local AI Document Assistant
-          Exec=AppRun
-          Icon=kno
-          Type=Application
-          Categories=Office;Education;
-          Terminal=false
-          DESKTOP
-
-          # Télécharge appimagetool (~5 MB) et génère l'AppImage
-          wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage \
-            -O /tmp/appimagetool
-          chmod +x /tmp/appimagetool
-
-          # --appimage-extract-and-run évite le besoin de FUSE sur le runner
-          ARCH=x86_64 /tmp/appimagetool --appimage-extract-and-run "$APPDIR" \
-            "release/installer/$ARCHIVE_NAME"
-
-          chmod +x "release/installer/$ARCHIVE_NAME"
           ls -lh "release/installer/$ARCHIVE_NAME"
-          echo "OK AppImage cree"
+          echo "OK tarball cree"
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
-          name: linux-appimage
-          path: release/installer/Kno-*-x86_64.AppImage
+          name: linux-tarball
+          path: release/installer/Kno-linux-x64-*.tar.gz
           retention-days: 7
           if-no-files-found: error
 
@@ -549,12 +496,14 @@ jobs:
             echo "Téléchargez \`Kno-Setup-$TAG-windows.exe\` et lancez l'installeur (Windows 10/11 64-bit)."
             echo ""
             echo "### Installation Linux"
-            echo "Téléchargez \`Kno-$TAG-x86_64.AppImage\`, puis :"
+            echo "Téléchargez \`Kno-linux-x64-$TAG.tar.gz\`, extrayez avec votre gestionnaire d'archives, puis double-cliquez sur le fichier \`kno\` dans le dossier extrait."
+            echo ""
+            echo "Ou en ligne de commande :"
             echo "\`\`\`bash"
-            echo "chmod +x Kno-$TAG-x86_64.AppImage"
-            echo "./Kno-$TAG-x86_64.AppImage"
+            echo "tar -xzf Kno-linux-x64-$TAG.tar.gz"
+            echo "cd kno && ./kno"
             echo "\`\`\`"
-            echo "Ou via l'explorateur de fichiers : clic droit → Propriétés → cocher \"Autoriser l'exécution\" → double-clic."
+            echo "L'interface s'ouvre sur http://localhost:8000"
             echo ""
             echo "### Installation macOS (Apple Silicon M1/M2/M3/M4)"
             echo "Téléchargez \`Kno-$TAG-macos-arm64.dmg\`, double-cliquez, puis glissez \`Kno.app\` dans le dossier Applications."
