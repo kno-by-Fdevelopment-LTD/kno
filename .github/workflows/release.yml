@@ -429,6 +429,12 @@ jobs:
           BUNDLE="$(cd "$(dirname "$0")/../.." && pwd)"
           ENGINE="$BUNDLE/Contents/Resources/kno_engine"
 
+          # macOS résout normalement les dylibs via @executable_path encodé
+          # par PyInstaller dans le binaire. DYLD_LIBRARY_PATH est ajouté en
+          # ceinture-bretelles pour le cas où certaines libs C bundlées
+          # (llama.cpp, embeddings) auraient des chemins mal encodés.
+          export DYLD_LIBRARY_PATH="$ENGINE/_internal:$ENGINE:${DYLD_LIBRARY_PATH:-}"
+
           # Données utilisateur persistantes (norme macOS)
           USER_DIR="$HOME/Library/Application Support/Kno"
           mkdir -p "$USER_DIR/models" "$USER_DIR/data" "$USER_DIR/vectorstore"
@@ -438,8 +444,8 @@ jobs:
           # Ouvre le navigateur après 3s
           (sleep 3 && open http://localhost:8000) &
 
-          # Lance kno depuis son dossier pour que PyInstaller trouve _internal/
-          # relativement à sys.executable.
+          # Lance kno depuis son dossier pour que @executable_path résolve
+          # correctement les libs internes.
           cd "$ENGINE"
           exec ./kno
           LAUNCHER
