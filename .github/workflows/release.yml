@@ -234,40 +234,79 @@ jobs:
           fi
           file dist/kno/kno
 
-      - name: Package tarball
+      - name: Package as AppImage
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
           TAG="${{ needs.prepare.outputs.tag }}"
-          ARCHIVE_NAME="Kno-linux-x64-$TAG.tar.gz"
+          ARCHIVE_NAME="Kno-$TAG-x86_64.AppImage"
 
           mkdir -p release/installer
-          TMP_PACK=$(mktemp -d)
-          mkdir -p "$TMP_PACK/kno"
-          cp -r dist/kno/. "$TMP_PACK/kno/"
 
-          echo '{"model_path": "", "admin_password": "admin"}' > "$TMP_PACK/kno/config.json"
-          mkdir -p "$TMP_PACK/kno/models"
+          # Structure AppDir : c'est le format attendu par appimagetool
+          APPDIR=$(mktemp -d)/Kno.AppDir
+          mkdir -p "$APPDIR/usr/bin"
+          cp -r dist/kno/. "$APPDIR/usr/bin/"
 
-          cat > "$TMP_PACK/kno/start_kno.sh" << 'LAUNCHER'
-          #!/usr/bin/env bash
-          SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-          cd "$SCRIPT_DIR"
-          echo "Kno demarre -> http://localhost:8000"
-          (sleep 2 && xdg-open http://localhost:8000 2>/dev/null || true) &
-          ./kno
-          LAUNCHER
-          chmod +x "$TMP_PACK/kno/start_kno.sh" "$TMP_PACK/kno/kno"
+          # Config par défaut + dossier models, embarqués dans l'image
+          echo '{"model_path": "", "admin_password": "admin"}' > "$APPDIR/usr/bin/config.json"
+          mkdir -p "$APPDIR/usr/bin/models"
 
-          tar -czf "release/installer/$ARCHIVE_NAME" -C "$TMP_PACK" kno
-          rm -rf "$TMP_PACK"
+          # AppRun = script lancé au double-clic. Copie config/models dans
+          # ~/.kno si pas déjà présent (pour persistance entre versions),
+          # puis lance kno et ouvre le navigateur sur localhost:8000.
+          cat > "$APPDIR/AppRun" << 'APPRUN'
+          #!/bin/bash
+          HERE="$(dirname "$(readlink -f "${0}")")"
+          USER_DIR="$HOME/.kno"
+          mkdir -p "$USER_DIR/models" "$USER_DIR/data" "$USER_DIR/vectorstore"
+          [ ! -f "$USER_DIR/config.json" ] && cp "$HERE/usr/bin/config.json" "$USER_DIR/config.json"
+          cd "$USER_DIR"
+          export KNO_HOME="$USER_DIR"
+          (sleep 3 && xdg-open http://localhost:8000 2>/dev/null) &
+          exec "$HERE/usr/bin/kno"
+          APPRUN
+          chmod +x "$APPDIR/AppRun"
 
+          # Icône (utilisée par les gestionnaires de bureau)
+          if [ -f "assets/kno_icon.png" ]; then
+            cp assets/kno_icon.png "$APPDIR/kno.png"
+          else
+            # Fallback : icône vide 1x1 pour ne pas faire planter appimagetool
+            echo "::warning::assets/kno_icon.png absent - icône par défaut"
+            convert -size 256x256 xc:'#1a2238' "$APPDIR/kno.png" 2>/dev/null || \
+              python3 -c "from PIL import Image; Image.new('RGB',(256,256),'#1a2238').save('$APPDIR/kno.png')"
+          fi
+
+          # .desktop : fichier de menu d'application (norme freedesktop.org)
+          cat > "$APPDIR/kno.desktop" << 'DESKTOP'
+          [Desktop Entry]
+          Name=Kno
+          Comment=Local AI Document Assistant
+          Exec=AppRun
+          Icon=kno
+          Type=Application
+          Categories=Office;Education;
+          Terminal=false
+          DESKTOP
+
+          # Télécharge appimagetool (~5 MB) et génère l'AppImage
+          wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage \
+            -O /tmp/appimagetool
+          chmod +x /tmp/appimagetool
+
+          # --appimage-extract-and-run évite le besoin de FUSE sur le runner
+          ARCH=x86_64 /tmp/appimagetool --appimage-extract-and-run "$APPDIR" \
+            "release/installer/$ARCHIVE_NAME"
+
+          chmod +x "release/installer/$ARCHIVE_NAME"
           ls -lh "release/installer/$ARCHIVE_NAME"
+          echo "OK AppImage cree"
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
-          name: linux-tarball
-          path: release/installer/Kno-linux-*.tar.gz
+          name: linux-appimage
+          path: release/installer/Kno-*-x86_64.AppImage
           retention-days: 7
           if-no-files-found: error
 
@@ -316,52 +355,109 @@ jobs:
           [ -f "dist/kno/kno" ] || (echo "::error::dist/kno/kno introuvable" && exit 1)
           file dist/kno/kno | grep -q "arm64" || (echo "::error::Binaire non arm64" && exit 1)
 
-      - name: Package tarball
+      - name: Package as .app bundle and .dmg
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
           TAG="${{ needs.prepare.outputs.tag }}"
-          ARCHIVE_NAME="Kno-macos-arm64-$TAG.tar.gz"
+          DMG_NAME="Kno-$TAG-macos-arm64.dmg"
+          APP_NAME="Kno.app"
 
           mkdir -p release/installer
-          TMP_PACK=$(mktemp -d)
-          mkdir -p "$TMP_PACK/kno"
-          cp -R dist/kno/ "$TMP_PACK/kno/"
-          echo '{"model_path": "", "admin_password": "admin"}' > "$TMP_PACK/kno/config.json"
-          mkdir -p "$TMP_PACK/kno/models"
 
-          cat > "$TMP_PACK/kno/start_kno.sh" << 'LAUNCHER'
-          #!/usr/bin/env bash
-          SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-          cd "$SCRIPT_DIR"
-          echo "Kno demarre -> http://localhost:8000"
-          (sleep 2 && open http://localhost:8000 2>/dev/null || true) &
-          ./kno
+          # Construction du bundle .app (norme macOS)
+          # Structure :
+          #   Kno.app/
+          #     Contents/
+          #       Info.plist
+          #       MacOS/Kno      ← script de lancement
+          #       Resources/
+          #         kno_engine/  ← contenu du PyInstaller
+          #         kno.icns     ← icône
+          STAGE=$(mktemp -d)
+          APP="$STAGE/$APP_NAME"
+          mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/kno_engine"
+
+          # Copie du binaire PyInstaller dans Resources
+          cp -R dist/kno/. "$APP/Contents/Resources/kno_engine/"
+          echo '{"model_path": "", "admin_password": "admin"}' \
+            > "$APP/Contents/Resources/kno_engine/config.json"
+          mkdir -p "$APP/Contents/Resources/kno_engine/models"
+
+          # Info.plist : métadonnées de l'app (visible dans Finder, Spotlight)
+          cat > "$APP/Contents/Info.plist" << PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>CFBundleName</key>           <string>Kno</string>
+              <key>CFBundleDisplayName</key>    <string>Kno</string>
+              <key>CFBundleIdentifier</key>     <string>eu.fdevelopment.kno</string>
+              <key>CFBundleVersion</key>        <string>$VERSION</string>
+              <key>CFBundleShortVersionString</key> <string>$VERSION</string>
+              <key>CFBundleExecutable</key>     <string>Kno</string>
+              <key>CFBundleIconFile</key>       <string>kno.icns</string>
+              <key>CFBundlePackageType</key>    <string>APPL</string>
+              <key>LSMinimumSystemVersion</key> <string>11.0</string>
+              <key>NSHighResolutionCapable</key> <true/>
+              <key>LSUIElement</key>            <false/>
+          </dict>
+          </plist>
+          PLIST
+
+          # MacOS/Kno : exécutable principal du bundle (script bash)
+          # Au double-clic, persiste les données dans ~/Library/Application Support/Kno,
+          # lance le binaire et ouvre Safari sur localhost:8000.
+          cat > "$APP/Contents/MacOS/Kno" << 'LAUNCHER'
+          #!/bin/bash
+          BUNDLE="$(cd "$(dirname "$0")/../.." && pwd)"
+          ENGINE="$BUNDLE/Contents/Resources/kno_engine"
+          USER_DIR="$HOME/Library/Application Support/Kno"
+          mkdir -p "$USER_DIR/models" "$USER_DIR/data" "$USER_DIR/vectorstore"
+          [ ! -f "$USER_DIR/config.json" ] && cp "$ENGINE/config.json" "$USER_DIR/config.json"
+          cd "$USER_DIR"
+          export KNO_HOME="$USER_DIR"
+          (sleep 3 && open http://localhost:8000) &
+          exec "$ENGINE/kno"
           LAUNCHER
-          chmod +x "$TMP_PACK/kno/start_kno.sh" "$TMP_PACK/kno/kno"
+          chmod +x "$APP/Contents/MacOS/Kno"
 
-          cat > "$TMP_PACK/kno/README_MACOS_FIRST_RUN.txt" << 'EOF'
-          KNO MACOS (Apple Silicon M1/M2/M3/M4) - PREMIERE EXECUTION
+          # Génération de l'icône .icns à partir du PNG fourni
+          if [ -f "assets/kno_icon.png" ]; then
+            ICONSET=$(mktemp -d)/kno.iconset
+            mkdir -p "$ICONSET"
+            # macOS attend ces tailles précises dans un .iconset
+            for SIZE in 16 32 64 128 256 512; do
+              sips -z $SIZE $SIZE assets/kno_icon.png \
+                --out "$ICONSET/icon_${SIZE}x${SIZE}.png" > /dev/null
+              DSIZE=$((SIZE * 2))
+              sips -z $DSIZE $DSIZE assets/kno_icon.png \
+                --out "$ICONSET/icon_${SIZE}x${SIZE}@2x.png" > /dev/null
+            done
+            iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/kno.icns"
+            echo "OK icone .icns generee"
+          else
+            echo "::warning::assets/kno_icon.png absent - app sans icone"
+          fi
 
-          Ce binaire n'est pas signe. Au premier lancement :
+          # Création du .dmg via hdiutil (natif macOS, pas de dépendance externe)
+          # Layout simple : Kno.app + alias /Applications côte à côte
+          DMG_STAGE=$(mktemp -d)
+          cp -R "$APP" "$DMG_STAGE/"
+          ln -s /Applications "$DMG_STAGE/Applications"
 
-              cd "/chemin/vers/kno"
-              xattr -dr com.apple.quarantine .
-              ./start_kno.sh
+          hdiutil create -volname "Kno $VERSION" \
+            -srcfolder "$DMG_STAGE" \
+            -ov -format UDZO \
+            "release/installer/$DMG_NAME"
 
-          Sur Apple Silicon, l'inference utilise automatiquement le GPU Metal.
+          ls -lh "release/installer/$DMG_NAME"
+          echo "OK DMG cree"
 
-          Support : contact@fdevelopment.eu
-          EOF
-
-          tar -czf "release/installer/$ARCHIVE_NAME" -C "$TMP_PACK" kno
-          rm -rf "$TMP_PACK"
-          ls -lh "release/installer/$ARCHIVE_NAME"
-
-      - name: Upload macOS Apple Silicon artifact
+      - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
         with:
-          name: macos-arm-tarball
-          path: release/installer/Kno-macos-arm64-*.tar.gz
+          name: macos-arm-dmg
+          path: release/installer/Kno-*-macos-arm64.dmg
           retention-days: 7
           if-no-files-found: error
 
@@ -394,7 +490,7 @@ jobs:
       - name: Collect artifacts
         run: |
           mkdir -p release_assets
-          find artifacts/ -type f \( -name "*.exe" -o -name "*.tar.gz" \) -exec cp {} release_assets/ \;
+          find artifacts/ -type f \( -name "*.exe" -o -name "*.AppImage" -o -name "*.dmg" -o -name "*.tar.gz" \) -exec cp {} release_assets/ \;
           echo "Fichiers a publier :"
           ls -lh release_assets/
           COUNT=$(ls release_assets/ | wc -l)
@@ -423,21 +519,19 @@ jobs:
             echo "Téléchargez \`Kno-Setup-$TAG-windows.exe\` et lancez l'installeur (Windows 10/11 64-bit)."
             echo ""
             echo "### Installation Linux"
+            echo "Téléchargez \`Kno-$TAG-x86_64.AppImage\`, puis :"
             echo "\`\`\`bash"
-            echo "tar -xzf Kno-linux-x64-$TAG.tar.gz"
-            echo "cd kno && ./start_kno.sh"
+            echo "chmod +x Kno-$TAG-x86_64.AppImage"
+            echo "./Kno-$TAG-x86_64.AppImage"
             echo "\`\`\`"
+            echo "Ou via l'explorateur de fichiers : clic droit → Propriétés → cocher \"Autoriser l'exécution\" → double-clic."
             echo ""
-            echo "### Installation macOS"
-            echo "- Mac Intel : \`Kno-macos-x64-$TAG.tar.gz\`"
-            echo "- Mac Apple Silicon : \`Kno-macos-arm64-$TAG.tar.gz\`"
+            echo "### Installation macOS (Apple Silicon M1/M2/M3/M4)"
+            echo "Téléchargez \`Kno-$TAG-macos-arm64.dmg\`, double-cliquez, puis glissez \`Kno.app\` dans le dossier Applications."
             echo ""
-            echo "\`\`\`bash"
-            echo "tar -xzf Kno-macos-*-$TAG.tar.gz"
-            echo "cd kno"
-            echo "xattr -dr com.apple.quarantine ."
-            echo "./start_kno.sh"
-            echo "\`\`\`"
+            echo "**Au premier lancement**, macOS bloquera l'app (binaire non signé) : ouvrez **Réglages Système → Confidentialité et sécurité**, cherchez le message concernant Kno et cliquez sur **\"Ouvrir quand même\"**. Une seule fois."
+            echo ""
+            echo "Sur Apple Silicon, l'inférence utilise automatiquement le GPU Metal."
             echo ""
             echo "---"
             echo "*Site : https://kno.fdevelopment.eu — Support : contact@fdevelopment.eu*"
