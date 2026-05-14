@@ -450,10 +450,12 @@ jobs:
         run: |
           TAG="${{ needs.prepare.outputs.tag }}"
           IS_PRE="${{ needs.prepare.outputs.is_prerelease }}"
+          PUBLIC_REPO="${{ github.repository }}"
 
           ARGS=(
             "$TAG"
             release_assets/*
+            --repo "$PUBLIC_REPO"
             --title "Kno $TAG"
             --notes-file release_notes.md
             --target main
@@ -462,10 +464,10 @@ jobs:
             ARGS+=(--prerelease)
           fi
 
-          if gh release view "$TAG" >/dev/null 2>&1; then
+          if gh release view "$TAG" --repo "$PUBLIC_REPO" >/dev/null 2>&1; then
             echo "::warning::La release $TAG existe deja - suppression et recreation"
-            gh release delete "$TAG" --yes
+            gh release delete "$TAG" --repo "$PUBLIC_REPO" --yes
           fi
 
           gh release create "${ARGS[@]}"
-          echo "::notice::Release publiee sur https://github.com/${{ github.repository }}/releases/tag/$TAG"
+          echo "::notice::Release publiee sur https://github.com/$PUBLIC_REPO/releases/tag/$TAG"
