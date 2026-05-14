@@ -256,14 +256,31 @@ jobs:
           # puis lance kno et ouvre le navigateur sur localhost:8000.
           cat > "$APPDIR/AppRun" << 'APPRUN'
           #!/bin/bash
+          # AppRun = entrée du AppImage. Au lancement, AppImage extrait son
+          # contenu dans /tmp/.mount_KnoXXXX/ et appelle ce script.
+          # HERE = chemin vers le AppDir extrait (ex: /tmp/.mount_KnoAbc12).
           HERE="$(dirname "$(readlink -f "${0}")")"
+          BIN_DIR="$HERE/usr/bin"
+
+          # PyInstaller en mode onedir attend libpython3.11.so.1.0 dans le
+          # dossier _internal/ à côté du binaire. On expose ce chemin au
+          # loader dynamique pour qu'il trouve la lib.
+          export LD_LIBRARY_PATH="$BIN_DIR/_internal:$BIN_DIR:${LD_LIBRARY_PATH:-}"
+
+          # Données utilisateur persistantes dans ~/.kno (survit aux maj)
           USER_DIR="$HOME/.kno"
           mkdir -p "$USER_DIR/models" "$USER_DIR/data" "$USER_DIR/vectorstore"
-          [ ! -f "$USER_DIR/config.json" ] && cp "$HERE/usr/bin/config.json" "$USER_DIR/config.json"
+          [ ! -f "$USER_DIR/config.json" ] && cp "$BIN_DIR/config.json" "$USER_DIR/config.json"
           cd "$USER_DIR"
           export KNO_HOME="$USER_DIR"
+
+          # Ouvre le navigateur après 3s (laisse le temps au serveur de démarrer)
           (sleep 3 && xdg-open http://localhost:8000 2>/dev/null) &
-          exec "$HERE/usr/bin/kno"
+
+          # Lance le binaire kno depuis son répertoire d'origine pour que
+          # PyInstaller trouve _internal/ relativement à sys.executable.
+          cd "$BIN_DIR"
+          exec ./kno
           APPRUN
           chmod +x "$APPDIR/AppRun"
 
@@ -411,13 +428,20 @@ jobs:
           #!/bin/bash
           BUNDLE="$(cd "$(dirname "$0")/../.." && pwd)"
           ENGINE="$BUNDLE/Contents/Resources/kno_engine"
+
+          # Données utilisateur persistantes (norme macOS)
           USER_DIR="$HOME/Library/Application Support/Kno"
           mkdir -p "$USER_DIR/models" "$USER_DIR/data" "$USER_DIR/vectorstore"
           [ ! -f "$USER_DIR/config.json" ] && cp "$ENGINE/config.json" "$USER_DIR/config.json"
-          cd "$USER_DIR"
           export KNO_HOME="$USER_DIR"
+
+          # Ouvre le navigateur après 3s
           (sleep 3 && open http://localhost:8000) &
-          exec "$ENGINE/kno"
+
+          # Lance kno depuis son dossier pour que PyInstaller trouve _internal/
+          # relativement à sys.executable.
+          cd "$ENGINE"
+          exec ./kno
           LAUNCHER
           chmod +x "$APP/Contents/MacOS/Kno"
 
