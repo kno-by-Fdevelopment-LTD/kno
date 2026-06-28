@@ -384,14 +384,21 @@ jobs:
           codesign --force --timestamp --options runtime --sign "$SIGN_ID" "$APP/Contents/MacOS/Kno"
           codesign --force --timestamp --options runtime --entitlements "$ENT" --sign "$SIGN_ID" "$APP"
           codesign --verify --strict --verbose=2 "$APP"
+          # DIAGNOSTIC (sans auth Apple) : quel certificat a signé l'app ?
+          # On doit voir "Authority=Developer ID Application: ...".
+          echo "===== codesign -dvvv (autorité de signature) ====="
+          codesign -dvvv "$APP" 2>&1 | grep -i "Authority=" || true
+          echo "=================================================="
           # ── Notarisation (zip de l'app) + staple ──
           ditto -c -k --keepParent "$APP" "$STAGE/Kno.zip"
           set +e
           SUBMIT_OUT=$(xcrun notarytool submit "$STAGE/Kno.zip" \
             --apple-id "$APPLE_ID" --password "$APPLE_APP_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait 2>&1)
           echo "$SUBMIT_OUT"
-          SUB_ID=$(echo "$SUBMIT_OUT" | awk '/id:/{print $2; exit}')
-          STATUS=$(echo "$SUBMIT_OUT" | awk '/status:/{print $2; exit}')
+          # Parsing fiable : on ancre sur le DÉBUT de ligne pour ne pas
+          # confondre avec "Current status: In Progress".
+          SUB_ID=$(echo "$SUBMIT_OUT"  | sed -n 's/^[[:space:]]*id:[[:space:]]*//p'     | head -1)
+          STATUS=$(echo "$SUBMIT_OUT"  | sed -n 's/^[[:space:]]*status:[[:space:]]*//p' | head -1)
           set -e
           if [ "$STATUS" != "Accepted" ]; then
             echo "::error::Notarisation $STATUS — detail du log Apple ci-dessous :"
