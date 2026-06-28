@@ -371,17 +371,34 @@ jobs:
             done
             iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/kno.icns"
           fi
-          # ── Signature (libs natives -> binaire -> launcher -> bundle) ──
-          find "$APP/Contents/Resources/kno_engine" -type f \( -name "*.dylib" -o -name "*.so" \) -print0 \
-            | xargs -0 -n1 codesign --force --timestamp --options runtime --sign "$SIGN_ID"
+          # ── Signature : TOUT fichier Mach-O (détecté par `file`, pas par
+          #    extension — sinon des exécutables sans .so/.dylib restent non
+          #    signés -> notarisation "Invalid"). Libs d'abord, puis le binaire
+          #    principal avec entitlements, le launcher, et enfin le bundle. ──
+          find "$APP/Contents/Resources/kno_engine" -type f -print0 | while IFS= read -r -d '' f; do
+            if file "$f" | grep -q "Mach-O"; then
+              codesign --force --timestamp --options runtime --sign "$SIGN_ID" "$f"
+            fi
+          done
           codesign --force --timestamp --options runtime --entitlements "$ENT" --sign "$SIGN_ID" "$APP/Contents/Resources/kno_engine/kno"
           codesign --force --timestamp --options runtime --sign "$SIGN_ID" "$APP/Contents/MacOS/Kno"
           codesign --force --timestamp --options runtime --entitlements "$ENT" --sign "$SIGN_ID" "$APP"
           codesign --verify --strict --verbose=2 "$APP"
           # ── Notarisation (zip de l'app) + staple ──
           ditto -c -k --keepParent "$APP" "$STAGE/Kno.zip"
-          xcrun notarytool submit "$STAGE/Kno.zip" \
-            --apple-id "$APPLE_ID" --password "$APPLE_APP_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait
+          set +e
+          SUBMIT_OUT=$(xcrun notarytool submit "$STAGE/Kno.zip" \
+            --apple-id "$APPLE_ID" --password "$APPLE_APP_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait 2>&1)
+          echo "$SUBMIT_OUT"
+          SUB_ID=$(echo "$SUBMIT_OUT" | awk '/id:/{print $2; exit}')
+          STATUS=$(echo "$SUBMIT_OUT" | awk '/status:/{print $2; exit}')
+          set -e
+          if [ "$STATUS" != "Accepted" ]; then
+            echo "::error::Notarisation $STATUS — detail du log Apple ci-dessous :"
+            xcrun notarytool log "$SUB_ID" \
+              --apple-id "$APPLE_ID" --password "$APPLE_APP_PASSWORD" --team-id "$APPLE_TEAM_ID" || true
+            exit 1
+          fi
           xcrun stapler staple "$APP"
           # ── DMG depuis l'app notariée + staple du dmg ──
           DMG_STAGE=$(mktemp -d); cp -R "$APP" "$DMG_STAGE/"; ln -s /Applications "$DMG_STAGE/Applications"
