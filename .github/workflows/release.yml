@@ -296,21 +296,33 @@ jobs:
           security create-keychain -p "$MACOS_KEYCHAIN_PWD" "$KEYCHAIN"
           security set-keychain-settings -lut 21600 "$KEYCHAIN"
           security unlock-keychain -p "$MACOS_KEYCHAIN_PWD" "$KEYCHAIN"
+          # Import du .p12 (certificat + clé privée). PAS de "-t cert" : ce
+          # filtre écarterait la clé privée → "0 valid identities found".
           security import "$RUNNER_TEMP/cert.p12" -P "$MACOS_CERTIFICATE_PWD" \
-            -A -t cert -f pkcs12 -k "$KEYCHAIN" -T /usr/bin/codesign
-          # AJOUTE le trousseau à la liste de recherche de codesign (le point
-          # qui manquait : "default-keychain" seul ne suffit pas).
+            -A -f pkcs12 -k "$KEYCHAIN" -T /usr/bin/codesign -T /usr/bin/security
+          # Intermédiaire Apple "Developer ID G2" (complète la chaîne de
+          # confiance, sinon l'identité peut apparaître comme non valide).
+          curl -fsSL https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer \
+            -o "$RUNNER_TEMP/DeveloperIDG2CA.cer" || true
+          [ -f "$RUNNER_TEMP/DeveloperIDG2CA.cer" ] && \
+            security import "$RUNNER_TEMP/DeveloperIDG2CA.cer" -k "$KEYCHAIN" || true
+          # Ajoute le trousseau à la liste de recherche de codesign.
           security list-keychains -d user -s "$KEYCHAIN" \
             $(security list-keychains -d user | sed s/\"//g)
           security set-key-partition-list -S apple-tool:,apple:,codesign: \
             -s -k "$MACOS_KEYCHAIN_PWD" "$KEYCHAIN"
           rm -f "$RUNNER_TEMP/cert.p12"
-          # Garde-fou : si aucune identité Developer ID, on s'arrête net.
+          # Détecte automatiquement l'identité de signature dans le trousseau
+          # (plus robuste qu'un nom exact). S'arrête net si aucune n'est valide.
           security find-identity -v -p codesigning "$KEYCHAIN"
-          if [ "$(security find-identity -v -p codesigning "$KEYCHAIN" | grep -c 'Developer ID Application')" -lt 1 ]; then
-            echo "::error::Aucune identite 'Developer ID Application' dans le trousseau — verifie MACOS_CERTIFICATE / MACOS_CERTIFICATE_PWD"
+          SIGN_ID=$(security find-identity -v -p codesigning "$KEYCHAIN" \
+            | awk '/Developer ID Application/{print $2; exit}')
+          if [ -z "$SIGN_ID" ]; then
+            echo "::error::Aucune identite 'Developer ID Application' VALIDE (cert+cle privee) dans le trousseau."
+            echo "::error::Re-exporte le .p12 depuis Keychain Access > Mes certificats (avec la cle privee)."
             exit 1
           fi
+          echo "::notice::Identite de signature detectee : $SIGN_ID"
 
           VERSION="${{ needs.prepare.outputs.version }}"
           TAG="${{ needs.prepare.outputs.tag }}"
@@ -361,10 +373,10 @@ jobs:
           fi
           # ── Signature (libs natives -> binaire -> launcher -> bundle) ──
           find "$APP/Contents/Resources/kno_engine" -type f \( -name "*.dylib" -o -name "*.so" \) -print0 \
-            | xargs -0 -n1 codesign --force --timestamp --options runtime --sign "$DEVID"
-          codesign --force --timestamp --options runtime --entitlements "$ENT" --sign "$DEVID" "$APP/Contents/Resources/kno_engine/kno"
-          codesign --force --timestamp --options runtime --sign "$DEVID" "$APP/Contents/MacOS/Kno"
-          codesign --force --timestamp --options runtime --entitlements "$ENT" --sign "$DEVID" "$APP"
+            | xargs -0 -n1 codesign --force --timestamp --options runtime --sign "$SIGN_ID"
+          codesign --force --timestamp --options runtime --entitlements "$ENT" --sign "$SIGN_ID" "$APP/Contents/Resources/kno_engine/kno"
+          codesign --force --timestamp --options runtime --sign "$SIGN_ID" "$APP/Contents/MacOS/Kno"
+          codesign --force --timestamp --options runtime --entitlements "$ENT" --sign "$SIGN_ID" "$APP"
           codesign --verify --strict --verbose=2 "$APP"
           # ── Notarisation (zip de l'app) + staple ──
           ditto -c -k --keepParent "$APP" "$STAGE/Kno.zip"
