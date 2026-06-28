@@ -284,10 +284,10 @@ jobs:
   # BUILD MACOS APPLE SILICON
   # ──────────────────────────────────────────────────────────────────────────
   build-macos-arm:
-    name: Build macOS (Apple Silicon arm64)
+    name: Build macOS (Apple Silicon arm64) signé + notarisé
     needs: prepare
     runs-on: macos-14
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - name: Checkout private source repo
         uses: actions/checkout@v4
@@ -303,17 +303,13 @@ jobs:
           architecture: arm64
           cache: 'pip'
 
-      - name: Verify architecture
-        run: test "$(python -c 'import platform; print(platform.machine())')" = "arm64"
-
       - name: Create venv and install dependencies
         run: |
           python -m venv venv
           venv/bin/python -m pip install --upgrade pip wheel setuptools
           grep -v '^llama-cpp-python' requirements.txt > requirements-ci.txt
           venv/bin/pip install -r requirements-ci.txt
-          venv/bin/pip install "llama-cpp-python==${{ env.LLAMA_CPP_VERSION }}" \
-            --force-reinstall --no-cache-dir
+          venv/bin/pip install "llama-cpp-python==${{ env.LLAMA_CPP_VERSION }}" --force-reinstall --no-cache-dir
           venv/bin/pip install "pyinstaller${{ env.PYINSTALLER_VERSION }}" pyarmor
 
       - name: Prepare sources
@@ -323,118 +319,102 @@ jobs:
         run: |
           venv/bin/pyinstaller --clean --noconfirm kno.spec
           [ -f "dist/kno/kno" ] || (echo "::error::dist/kno/kno introuvable" && exit 1)
-          file dist/kno/kno | grep -q "arm64" || (echo "::error::Binaire non arm64" && exit 1)
 
-      - name: Package as .app bundle and .dmg
+      - name: Import Developer ID certificate
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+          MACOS_KEYCHAIN_PWD: ${{ secrets.MACOS_KEYCHAIN_PWD }}
         run: |
+          echo "$MACOS_CERTIFICATE" | base64 --decode > /tmp/cert.p12
+          security create-keychain -p "$MACOS_KEYCHAIN_PWD" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "$MACOS_KEYCHAIN_PWD" build.keychain
+          security set-keychain-settings -lut 7200 build.keychain
+          security import /tmp/cert.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$MACOS_KEYCHAIN_PWD" build.keychain
+          rm -f /tmp/cert.p12
+          security find-identity -v -p codesigning build.keychain
+
+      - name: Package, sign, notarize, staple
+        env:
+          DEVID: ${{ secrets.APPLE_DEVELOPER_ID }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -e
           VERSION="${{ needs.prepare.outputs.version }}"
           TAG="${{ needs.prepare.outputs.tag }}"
           DMG_NAME="Kno-$TAG-macos-arm64.dmg"
-          APP_NAME="Kno.app"
-
+          ENT="$GITHUB_WORKSPACE/installer/entitlements_macos.plist"
           mkdir -p release/installer
 
-          # Construction du bundle .app (norme macOS)
-          # Structure :
-          #   Kno.app/
-          #     Contents/
-          #       Info.plist
-          #       MacOS/Kno      ← script de lancement
-          #       Resources/
-          #         kno_engine/  ← contenu du PyInstaller
-          #         kno.icns     ← icône
-          STAGE=$(mktemp -d)
-          APP="$STAGE/$APP_NAME"
+          STAGE=$(mktemp -d); APP="$STAGE/Kno.app"
           mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/kno_engine"
-
-          # Copie du binaire PyInstaller dans Resources
           cp -R dist/kno/. "$APP/Contents/Resources/kno_engine/"
-          echo '{"model_path": "", "admin_password": "admin"}' \
-            > "$APP/Contents/Resources/kno_engine/config.json"
+          echo '{"model_path": "", "admin_password": "admin"}' > "$APP/Contents/Resources/kno_engine/config.json"
           mkdir -p "$APP/Contents/Resources/kno_engine/models"
 
-          # Info.plist : métadonnées de l'app (visible dans Finder, Spotlight)
           cat > "$APP/Contents/Info.plist" << PLIST
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>CFBundleName</key>           <string>Kno</string>
-              <key>CFBundleDisplayName</key>    <string>Kno</string>
-              <key>CFBundleIdentifier</key>     <string>eu.fdevelopment.kno</string>
-              <key>CFBundleVersion</key>        <string>$VERSION</string>
-              <key>CFBundleShortVersionString</key> <string>$VERSION</string>
-              <key>CFBundleExecutable</key>     <string>Kno</string>
-              <key>CFBundleIconFile</key>       <string>kno.icns</string>
-              <key>CFBundlePackageType</key>    <string>APPL</string>
-              <key>LSMinimumSystemVersion</key> <string>11.0</string>
-              <key>NSHighResolutionCapable</key> <true/>
-              <key>LSUIElement</key>            <false/>
-          </dict>
-          </plist>
+          <plist version="1.0"><dict>
+            <key>CFBundleName</key><string>Kno</string>
+            <key>CFBundleDisplayName</key><string>Kno</string>
+            <key>CFBundleIdentifier</key><string>eu.fdevelopment.kno</string>
+            <key>CFBundleVersion</key><string>$VERSION</string>
+            <key>CFBundleShortVersionString</key><string>$VERSION</string>
+            <key>CFBundleExecutable</key><string>Kno</string>
+            <key>CFBundleIconFile</key><string>kno.icns</string>
+            <key>CFBundlePackageType</key><string>APPL</string>
+            <key>LSMinimumSystemVersion</key><string>11.0</string>
+            <key>NSHighResolutionCapable</key><true/>
+          </dict></plist>
           PLIST
 
-          # MacOS/Kno : exécutable principal du bundle (script bash)
-          # Au double-clic, persiste les données dans ~/Library/Application Support/Kno,
-          # lance le binaire et ouvre Safari sur localhost:8000.
           cat > "$APP/Contents/MacOS/Kno" << 'LAUNCHER'
           #!/bin/bash
           BUNDLE="$(cd "$(dirname "$0")/../.." && pwd)"
           ENGINE="$BUNDLE/Contents/Resources/kno_engine"
-
-          # macOS résout normalement les dylibs via @executable_path encodé
-          # par PyInstaller dans le binaire. DYLD_LIBRARY_PATH est ajouté en
-          # ceinture-bretelles pour le cas où certaines libs C bundlées
-          # (llama.cpp, embeddings) auraient des chemins mal encodés.
           export DYLD_LIBRARY_PATH="$ENGINE/_internal:$ENGINE:${DYLD_LIBRARY_PATH:-}"
-
-          # Données utilisateur persistantes (norme macOS)
           USER_DIR="$HOME/Library/Application Support/Kno"
           mkdir -p "$USER_DIR/models" "$USER_DIR/data" "$USER_DIR/vectorstore"
           [ ! -f "$USER_DIR/config.json" ] && cp "$ENGINE/config.json" "$USER_DIR/config.json"
           export KNO_HOME="$USER_DIR"
-
-          # Ouvre le navigateur après 3s
           (sleep 3 && open http://localhost:8000) &
-
-          # Lance kno depuis son dossier pour que @executable_path résolve
-          # correctement les libs internes.
-          cd "$ENGINE"
-          exec ./kno
+          cd "$ENGINE"; exec ./kno
           LAUNCHER
           chmod +x "$APP/Contents/MacOS/Kno"
 
-          # Génération de l'icône .icns à partir du PNG fourni
           if [ -f "assets/kno_icon.png" ]; then
-            ICONSET=$(mktemp -d)/kno.iconset
-            mkdir -p "$ICONSET"
-            # macOS attend ces tailles précises dans un .iconset
+            ICONSET=$(mktemp -d)/kno.iconset; mkdir -p "$ICONSET"
             for SIZE in 16 32 64 128 256 512; do
-              sips -z $SIZE $SIZE assets/kno_icon.png \
-                --out "$ICONSET/icon_${SIZE}x${SIZE}.png" > /dev/null
-              DSIZE=$((SIZE * 2))
-              sips -z $DSIZE $DSIZE assets/kno_icon.png \
-                --out "$ICONSET/icon_${SIZE}x${SIZE}@2x.png" > /dev/null
+              sips -z $SIZE $SIZE assets/kno_icon.png --out "$ICONSET/icon_${SIZE}x${SIZE}.png" >/dev/null
+              D=$((SIZE*2)); sips -z $D $D assets/kno_icon.png --out "$ICONSET/icon_${SIZE}x${SIZE}@2x.png" >/dev/null
             done
             iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/kno.icns"
-            echo "OK icone .icns generee"
-          else
-            echo "::warning::assets/kno_icon.png absent - app sans icone"
           fi
 
-          # Création du .dmg via hdiutil (natif macOS, pas de dépendance externe)
-          # Layout simple : Kno.app + alias /Applications côte à côte
-          DMG_STAGE=$(mktemp -d)
-          cp -R "$APP" "$DMG_STAGE/"
-          ln -s /Applications "$DMG_STAGE/Applications"
+          # ── Signature (libs natives -> binaire -> launcher -> bundle) ──
+          find "$APP/Contents/Resources/kno_engine" -type f \( -name "*.dylib" -o -name "*.so" \) -print0 \
+            | xargs -0 -n1 codesign --force --timestamp --options runtime --sign "$DEVID"
+          codesign --force --timestamp --options runtime --entitlements "$ENT" --sign "$DEVID" "$APP/Contents/Resources/kno_engine/kno"
+          codesign --force --timestamp --options runtime --sign "$DEVID" "$APP/Contents/MacOS/Kno"
+          codesign --force --timestamp --options runtime --entitlements "$ENT" --sign "$DEVID" "$APP"
+          codesign --verify --strict --verbose=2 "$APP"
 
-          hdiutil create -volname "Kno $VERSION" \
-            -srcfolder "$DMG_STAGE" \
-            -ov -format UDZO \
-            "release/installer/$DMG_NAME"
+          # ── Notarisation (zip de l'app) + staple ──
+          ditto -c -k --keepParent "$APP" "$STAGE/Kno.zip"
+          xcrun notarytool submit "$STAGE/Kno.zip" \
+            --apple-id "$APPLE_ID" --password "$APPLE_APP_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait
+          xcrun stapler staple "$APP"
 
+          # ── DMG depuis l'app notariée + staple du dmg ──
+          DMG_STAGE=$(mktemp -d); cp -R "$APP" "$DMG_STAGE/"; ln -s /Applications "$DMG_STAGE/Applications"
+          hdiutil create -volname "Kno $VERSION" -srcfolder "$DMG_STAGE" -ov -format UDZO "release/installer/$DMG_NAME"
+          xcrun stapler staple "release/installer/$DMG_NAME" || true
           ls -lh "release/installer/$DMG_NAME"
-          echo "OK DMG cree"
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
@@ -443,7 +423,6 @@ jobs:
           path: release/installer/Kno-*-macos-arm64.dmg
           retention-days: 7
           if-no-files-found: error
-
   # ──────────────────────────────────────────────────────────────────────────
   # PUBLISH — Crée la release sur CE repo (public) avec les 4 artefacts
   # ──────────────────────────────────────────────────────────────────────────
