@@ -10,9 +10,7 @@
 # Secret requis :
 #   PAT_READ_PRIVATE : fine-grained PAT avec Contents=Read-only
 #                     sur kaneda59/Kno
-
 name: Build and publish Kno release
-
 on:
   repository_dispatch:
     types: [build-release]
@@ -26,15 +24,12 @@ on:
         description: 'Version sans le v (ex: 1.9.7)'
         required: true
         type: string
-
 permissions:
   contents: write   # nécessaire pour gh release create sur ce même repo
-
 env:
   PYTHON_VERSION: '3.11'
   PYINSTALLER_VERSION: '>=6.0,<7.0'
   LLAMA_CPP_VERSION: '0.2.90'
-
 jobs:
   # ──────────────────────────────────────────────────────────────────────────
   # PREPARE — normalise les paramètres venant des deux triggers possibles
@@ -57,25 +52,20 @@ jobs:
             TAG="${{ github.event.inputs.tag }}"
             VERSION="${{ github.event.inputs.version }}"
           fi
-
           if [ -z "$TAG" ] || [ -z "$VERSION" ]; then
             echo "::error::Tag ou version manquant"
             exit 1
           fi
-
           if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-(beta|rc)[0-9]*)?$ ]]; then
             echo "::error::Version invalide : $VERSION"
             exit 1
           fi
-
           IS_PRE="false"
           if [[ "$VERSION" =~ -(beta|rc) ]]; then IS_PRE="true"; fi
-
           echo "tag=$TAG"               >> "$GITHUB_OUTPUT"
           echo "version=$VERSION"       >> "$GITHUB_OUTPUT"
           echo "is_prerelease=$IS_PRE"  >> "$GITHUB_OUTPUT"
           echo "::notice::Build Kno $TAG (version=$VERSION, prerelease=$IS_PRE)"
-
   # ──────────────────────────────────────────────────────────────────────────
   # BUILD WINDOWS
   # ──────────────────────────────────────────────────────────────────────────
@@ -91,16 +81,13 @@ jobs:
           repository: kaneda59/Kno
           token: ${{ secrets.PAT_READ_PRIVATE }}
           ref: ${{ needs.prepare.outputs.tag }}
-
       - name: Setup Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
-
       - name: Install Inno Setup 6
         run: choco install innosetup --no-progress -y
-
       - name: Create venv and install dependencies
         shell: pwsh
         run: |
@@ -112,11 +99,9 @@ jobs:
             --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu122 `
             --force-reinstall --no-cache-dir
           venv\Scripts\pip.exe install "pyinstaller${{ env.PYINSTALLER_VERSION }}" pyarmor
-
       - name: Prepare sources
         shell: pwsh
         run: venv\Scripts\python.exe ci\prepare_build.py "${{ needs.prepare.outputs.version }}"
-
       - name: Compile with PyInstaller
         shell: pwsh
         run: |
@@ -126,7 +111,6 @@ jobs:
             exit 1
           }
           Write-Host "OK dist\kno\kno.exe genere"
-
       - name: Prepare release/ folder
         shell: pwsh
         run: |
@@ -134,23 +118,18 @@ jobs:
           Copy-Item -Recurse -Force dist\kno\* release\kno\
           '{"model_path": "", "admin_password": "admin"}' | Set-Content release\kno\config.json
           New-Item -ItemType Directory -Path release\kno\models -Force | Out-Null
-
       - name: Build installer with Inno Setup
         shell: pwsh
         run: |
           $VERSION = "${{ needs.prepare.outputs.version }}"
-
           if (-not (Test-Path "installer\kno_setup.iss")) {
             Write-Error "installer\kno_setup.iss introuvable dans le repo"
             exit 1
           }
-
           New-Item -ItemType Directory -Path release\installer -Force | Out-Null
-
           if (-not (Test-Path "installer\config.default.json")) {
             '{"model_path": "", "admin_password": "admin"}' | Set-Content installer\config.default.json
           }
-
           if (-not (Test-Path "assets\icon_32.ico")) {
             Write-Host "::warning::assets\icon_32.ico introuvable - SetupIconFile commentee"
             $issPath = "installer\kno_setup.iss"
@@ -158,7 +137,6 @@ jobs:
             $content = $content -replace '(?m)^SetupIconFile=', '; SetupIconFile='
             Set-Content -Path $issPath -Value $content -NoNewline
           }
-
           Push-Location installer
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DAppVersion=$VERSION kno_setup.iss
           $iscc_code = $LASTEXITCODE
@@ -167,7 +145,6 @@ jobs:
             Write-Error "Inno Setup a echoue (code $iscc_code)"
             exit 1
           }
-
           $installer = Get-ChildItem release\installer\Kno-Setup-*-windows.exe | Select-Object -First 1
           if (-not $installer) {
             Write-Error "Installer Inno Setup non genere"
@@ -175,7 +152,6 @@ jobs:
           }
           $sizeMB = [math]::Round($installer.Length / 1MB, 1)
           Write-Host "OK Installer cree : $($installer.Name) ($sizeMB MB)"
-
       - name: Upload Windows installer artifact
         uses: actions/upload-artifact@v4
         with:
@@ -183,7 +159,6 @@ jobs:
           path: release/installer/Kno-Setup-*-windows.exe
           retention-days: 7
           if-no-files-found: error
-
   # ──────────────────────────────────────────────────────────────────────────
   # BUILD LINUX
   # ──────────────────────────────────────────────────────────────────────────
@@ -199,19 +174,16 @@ jobs:
           repository: kaneda59/Kno
           token: ${{ secrets.PAT_READ_PRIVATE }}
           ref: ${{ needs.prepare.outputs.tag }}
-
       - name: Setup Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
-
       - name: Install system dependencies
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends \
             build-essential libffi-dev libssl-dev
-
       - name: Create venv and install dependencies
         run: |
           python -m venv venv
@@ -227,10 +199,8 @@ jobs:
             --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu122 \
             --force-reinstall --no-cache-dir
           venv/bin/pip install "pyinstaller${{ env.PYINSTALLER_VERSION }}" pyarmor
-
       - name: Prepare sources
         run: venv/bin/python ci/prepare_build.py "${{ needs.prepare.outputs.version }}"
-
       - name: Compile with PyInstaller
         run: |
           venv/bin/pyinstaller --clean --noconfirm kno.spec
@@ -239,15 +209,12 @@ jobs:
             exit 1
           fi
           file dist/kno/kno
-
       - name: Package tarball
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
           TAG="${{ needs.prepare.outputs.tag }}"
           ARCHIVE_NAME="Kno-linux-x64-$TAG.tar.gz"
-
           mkdir -p release/installer
-
           # Structure de l'archive (identique à celle qui marchait sur les
           # versions précédentes : ouvert avec un gestionnaire d'archives,
           # double-clic sur "kno" suffit pour lancer le binaire) :
@@ -259,19 +226,14 @@ jobs:
           TMP_PACK=$(mktemp -d)
           mkdir -p "$TMP_PACK/kno"
           cp -r dist/kno/. "$TMP_PACK/kno/"
-
           echo '{"model_path": "", "admin_password": "admin"}' > "$TMP_PACK/kno/config.json"
           mkdir -p "$TMP_PACK/kno/models"
-
           # S'assure que le binaire kno est exécutable
           chmod +x "$TMP_PACK/kno/kno"
-
           tar -czf "release/installer/$ARCHIVE_NAME" -C "$TMP_PACK" kno
           rm -rf "$TMP_PACK"
-
           ls -lh "release/installer/$ARCHIVE_NAME"
           echo "OK tarball cree"
-
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
@@ -279,7 +241,6 @@ jobs:
           path: release/installer/Kno-linux-x64-*.tar.gz
           retention-days: 7
           if-no-files-found: error
-
   # ──────────────────────────────────────────────────────────────────────────
   # BUILD MACOS APPLE SILICON
   # ──────────────────────────────────────────────────────────────────────────
@@ -295,14 +256,12 @@ jobs:
           repository: kaneda59/Kno
           token: ${{ secrets.PAT_READ_PRIVATE }}
           ref: ${{ needs.prepare.outputs.tag }}
-
       - name: Setup Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           architecture: arm64
           cache: 'pip'
-
       - name: Create venv and install dependencies
         run: |
           python -m venv venv
@@ -311,51 +270,58 @@ jobs:
           venv/bin/pip install -r requirements-ci.txt
           venv/bin/pip install "llama-cpp-python==${{ env.LLAMA_CPP_VERSION }}" --force-reinstall --no-cache-dir
           venv/bin/pip install "pyinstaller${{ env.PYINSTALLER_VERSION }}" pyarmor
-
       - name: Prepare sources
         run: venv/bin/python ci/prepare_build.py "${{ needs.prepare.outputs.version }}"
-
       - name: Compile with PyInstaller
         run: |
           venv/bin/pyinstaller --clean --noconfirm kno.spec
           [ -f "dist/kno/kno" ] || (echo "::error::dist/kno/kno introuvable" && exit 1)
-
-      - name: Import Developer ID certificate
+      - name: Package, sign, notarize, staple
         env:
           MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
           MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
           MACOS_KEYCHAIN_PWD: ${{ secrets.MACOS_KEYCHAIN_PWD }}
-        run: |
-          echo "$MACOS_CERTIFICATE" | base64 --decode > /tmp/cert.p12
-          security create-keychain -p "$MACOS_KEYCHAIN_PWD" build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p "$MACOS_KEYCHAIN_PWD" build.keychain
-          security set-keychain-settings -lut 7200 build.keychain
-          security import /tmp/cert.p12 -k build.keychain -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple: -s -k "$MACOS_KEYCHAIN_PWD" build.keychain
-          rm -f /tmp/cert.p12
-          security find-identity -v -p codesigning build.keychain
-
-      - name: Package, sign, notarize, staple
-        env:
           DEVID: ${{ secrets.APPLE_DEVELOPER_ID }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           set -e
+
+          # ── Import du certificat dans un trousseau dédié, dans le MÊME step
+          #    que la signature (sinon l'état du trousseau se perd entre steps,
+          #    d'où le "item could not be found in the keychain" précédent) ──
+          KEYCHAIN="$RUNNER_TEMP/build.keychain-db"
+          echo "$MACOS_CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p "$MACOS_KEYCHAIN_PWD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$MACOS_KEYCHAIN_PWD" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/cert.p12" -P "$MACOS_CERTIFICATE_PWD" \
+            -A -t cert -f pkcs12 -k "$KEYCHAIN" -T /usr/bin/codesign
+          # AJOUTE le trousseau à la liste de recherche de codesign (le point
+          # qui manquait : "default-keychain" seul ne suffit pas).
+          security list-keychains -d user -s "$KEYCHAIN" \
+            $(security list-keychains -d user | sed s/\"//g)
+          security set-key-partition-list -S apple-tool:,apple:,codesign: \
+            -s -k "$MACOS_KEYCHAIN_PWD" "$KEYCHAIN"
+          rm -f "$RUNNER_TEMP/cert.p12"
+          # Garde-fou : si aucune identité Developer ID, on s'arrête net.
+          security find-identity -v -p codesigning "$KEYCHAIN"
+          if [ "$(security find-identity -v -p codesigning "$KEYCHAIN" | grep -c 'Developer ID Application')" -lt 1 ]; then
+            echo "::error::Aucune identite 'Developer ID Application' dans le trousseau — verifie MACOS_CERTIFICATE / MACOS_CERTIFICATE_PWD"
+            exit 1
+          fi
+
           VERSION="${{ needs.prepare.outputs.version }}"
           TAG="${{ needs.prepare.outputs.tag }}"
           DMG_NAME="Kno-$TAG-macos-arm64.dmg"
           ENT="$GITHUB_WORKSPACE/installer/entitlements_macos.plist"
           mkdir -p release/installer
-
           STAGE=$(mktemp -d); APP="$STAGE/Kno.app"
           mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/kno_engine"
           cp -R dist/kno/. "$APP/Contents/Resources/kno_engine/"
           echo '{"model_path": "", "admin_password": "admin"}' > "$APP/Contents/Resources/kno_engine/config.json"
           mkdir -p "$APP/Contents/Resources/kno_engine/models"
-
           cat > "$APP/Contents/Info.plist" << PLIST
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -372,7 +338,6 @@ jobs:
             <key>NSHighResolutionCapable</key><true/>
           </dict></plist>
           PLIST
-
           cat > "$APP/Contents/MacOS/Kno" << 'LAUNCHER'
           #!/bin/bash
           BUNDLE="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -386,7 +351,6 @@ jobs:
           cd "$ENGINE"; exec ./kno
           LAUNCHER
           chmod +x "$APP/Contents/MacOS/Kno"
-
           if [ -f "assets/kno_icon.png" ]; then
             ICONSET=$(mktemp -d)/kno.iconset; mkdir -p "$ICONSET"
             for SIZE in 16 32 64 128 256 512; do
@@ -395,7 +359,6 @@ jobs:
             done
             iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/kno.icns"
           fi
-
           # ── Signature (libs natives -> binaire -> launcher -> bundle) ──
           find "$APP/Contents/Resources/kno_engine" -type f \( -name "*.dylib" -o -name "*.so" \) -print0 \
             | xargs -0 -n1 codesign --force --timestamp --options runtime --sign "$DEVID"
@@ -403,19 +366,16 @@ jobs:
           codesign --force --timestamp --options runtime --sign "$DEVID" "$APP/Contents/MacOS/Kno"
           codesign --force --timestamp --options runtime --entitlements "$ENT" --sign "$DEVID" "$APP"
           codesign --verify --strict --verbose=2 "$APP"
-
           # ── Notarisation (zip de l'app) + staple ──
           ditto -c -k --keepParent "$APP" "$STAGE/Kno.zip"
           xcrun notarytool submit "$STAGE/Kno.zip" \
             --apple-id "$APPLE_ID" --password "$APPLE_APP_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait
           xcrun stapler staple "$APP"
-
           # ── DMG depuis l'app notariée + staple du dmg ──
           DMG_STAGE=$(mktemp -d); cp -R "$APP" "$DMG_STAGE/"; ln -s /Applications "$DMG_STAGE/Applications"
           hdiutil create -volname "Kno $VERSION" -srcfolder "$DMG_STAGE" -ov -format UDZO "release/installer/$DMG_NAME"
           xcrun stapler staple "release/installer/$DMG_NAME" || true
           ls -lh "release/installer/$DMG_NAME"
-
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
         with:
@@ -438,17 +398,14 @@ jobs:
           repository: kaneda59/Kno
           token: ${{ secrets.PAT_READ_PRIVATE }}
           ref: ${{ needs.prepare.outputs.tag }}
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts/
-
       - name: Collect artifacts
         run: |
           mkdir -p release_assets
@@ -460,12 +417,10 @@ jobs:
             echo "::error::Attendu 3 artefacts, trouve $COUNT"
             exit 1
           fi
-
       - name: Extract release notes from CHANGELOG.md
         run: |
           python ci/extract_changelog.py "${{ needs.prepare.outputs.version }}" > release_notes_body.md
           cat release_notes_body.md
-
       - name: Build full release notes
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
@@ -493,7 +448,7 @@ jobs:
             echo "### Installation macOS (Apple Silicon M1/M2/M3/M4)"
             echo "Téléchargez \`Kno-$TAG-macos-arm64.dmg\`, double-cliquez, puis glissez \`Kno.app\` dans le dossier Applications."
             echo ""
-            echo "**Au premier lancement**, macOS bloquera l'app (binaire non signé) : ouvrez **Réglages Système → Confidentialité et sécurité**, cherchez le message concernant Kno et cliquez sur **\"Ouvrir quand même\"**. Une seule fois."
+            echo "L'app est **signée Developer ID + notarisée Apple** : elle s'ouvre directement, sans blocage Gatekeeper."
             echo ""
             echo "Sur Apple Silicon, l'inférence utilise automatiquement le GPU Metal."
             echo ""
@@ -501,7 +456,6 @@ jobs:
             echo "*Site : https://kno.fdevelopment.eu — Support : contact@fdevelopment.eu*"
           } > release_notes.md
           cat release_notes.md
-
       - name: Create release on this (public) repo
         env:
           GH_TOKEN: ${{ github.token }}
@@ -509,7 +463,6 @@ jobs:
           TAG="${{ needs.prepare.outputs.tag }}"
           IS_PRE="${{ needs.prepare.outputs.is_prerelease }}"
           PUBLIC_REPO="${{ github.repository }}"
-
           ARGS=(
             "$TAG"
             release_assets/*
@@ -521,11 +474,9 @@ jobs:
           if [ "$IS_PRE" = "true" ]; then
             ARGS+=(--prerelease)
           fi
-
           if gh release view "$TAG" --repo "$PUBLIC_REPO" >/dev/null 2>&1; then
             echo "::warning::La release $TAG existe deja - suppression et recreation"
             gh release delete "$TAG" --repo "$PUBLIC_REPO" --yes
           fi
-
           gh release create "${ARGS[@]}"
           echo "::notice::Release publiee sur https://github.com/$PUBLIC_REPO/releases/tag/$TAG"
